@@ -274,5 +274,9 @@ RttEstimator::Reset()
   ResetMultiplier();
 }
 
+double
+ RttEstimator::GetTmpcorrelativity(Time curTime, Time rcvTime)const{
+	return exp(rcvTime.ToDouble(Time::S)-curTime.ToDouble(Time::S));
+}
 } // namespace ndn
 } // namespace ns3
