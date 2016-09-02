@@ -197,6 +197,14 @@ RttMeanDeviation::DiscardInterestBySeq(SequenceNumber32 disSeq)
 	    }
 	}
 }
+//----------------------------------------------------------------------------------------------------------------
+double
+RttMeanDeviation::CalRTObyCorrelativity(void)
+{
+	//SiYan Yao
+	double result=0.0;
+	return result;
+}
 //=====================================================
 
 Time

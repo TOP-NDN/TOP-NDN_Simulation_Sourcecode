@@ -99,6 +99,9 @@ public:
   virtual void
   DiscardInterestBySeq(SequenceNumber32 disSeq)=0;
 
+  virtual double
+  CalRTObyCorrelativity(void)=0;
+
   //=====================================================
   /**
    * \brief Note that a particular ack sequence has been received
@@ -192,6 +195,8 @@ public:
   Time
   GetCurrentEstimate(void) const;
 
+  //=====================================================
+  //Siyan Yao
   double
   GetTmpcorrelativity(Time curTime, Time rcvTime)const;
 
