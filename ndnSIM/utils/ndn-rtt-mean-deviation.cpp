@@ -179,12 +179,24 @@ RttMeanDeviation::SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size
 	      break;
 	    }
 	  }
-
 	  // Note that a particular sequence has been sent
 	  if (i == m_history.end())
 	    m_history.push_back(RttHistory(seq, size, Simulator::Now(), name));
 }
-
+//----------------------------------------------------------------------------------------------------------------
+void
+RttMeanDeviation::DiscardInterestBySeq(SequenceNumber32 disSeq)
+{
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if (disSeq == i->seq)
+	    {
+			//cout<<"Discarding "<<disSeq<<"...."<<endl;
+			m_history.erase(i);             //rtt is nor calculated for retransmitted data
+			break;
+	    }
+	}
+}
 //=====================================================
 
 Time
@@ -215,11 +227,23 @@ RttMeanDeviation::AckSeq(Name name, SequenceNumber32 ackSeq)
       // Found it
       if (!i->retx)
       {
-        m = Simulator::Now() - i->time; // Elapsed time
+    	i->rcvTime = Simulator::Now();
+    	//---------------------------------------------------------------------------------------------
+        m = i->rcvTime - i->time; // Elapsed time
+        cout<<i->time<<endl;
+        cout<<i->rcvTime<<endl;
+        cout<<m.ToDouble(Time::MS)<<endl;
+        cout<<"-----------------------------------"<<endl;
+        //---------------------------------------------------------------------------------------------
         Measurement(m);                      // Log the measurement
         ResetMultiplier();              // Reset multiplier on valid measurement
       }
-      m_history.erase(i);             //rtt is nor calculated for retransmitted data
+      else
+      {
+    	  cout<<"Seq="<<i->seq<<" was retransmitted !!!"<<endl;
+    	  //retransmit packet will not longer record
+    	  m_history.erase(i);
+      }
       break;
     }
   }

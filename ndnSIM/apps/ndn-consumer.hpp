@@ -30,6 +30,7 @@
 
 #include "ns3/ndnSIM/model/ndn-common.hpp"
 #include "ns3/ndnSIM/utils/ndn-rtt-estimator.hpp"
+//#include "ndn-rtt-mean-deviation.hpp"
 #include "ns3/ndnSIM/utils/ndn-fw-hop-count-tag.hpp"
 
 #include <set>
@@ -101,7 +102,13 @@ public:
   virtual void
   WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name);
   //=======================================================
+  //Set the number of retransmit for every interest
+  void
+  SetRetxNumber(uint32_t num);
 
+  uint32_t
+  GetRetxNumber() const;
+  //=======================================================
 public:
   typedef void (*LastRetransmittedInterestDataDelayCallback)(Ptr<App> app, uint32_t seqno, Time delay, int32_t hopCount);
   typedef void (*FirstInterestDataDelayCallback)(Ptr<App> app, uint32_t seqno, Time delay, uint32_t retxCount, int32_t hopCount);
@@ -151,10 +158,15 @@ protected:
   EventId m_retxEvent; ///< @brief Event to check whether or not retransmission should be performed
 
   Ptr<RttEstimator> m_rtt; ///< @brief RTT estimator
+  //Ptr<RttMeanDeviation> m_rtt;
 
   Time m_offTime;          ///< \brief Time interval between packets
   Name m_interestName;     ///< \brief NDN Name of the Interest (use Name)
   Time m_interestLifeTime; ///< \brief LifeTime for interest packet
+
+  //----------------------------------------------------------------------------------
+  //Yuwei
+  uint32_t m_retxNum;        ///number of retransmit for every interest
 
   /// @cond include_hidden
   /**

@@ -81,7 +81,8 @@ Consumer::GetTypeId(void)
 Consumer::Consumer()
   : m_rand(CreateObject<UniformRandomVariable>())
   , m_seq(0)
-  , m_seqMax(0) // don't request anything
+  , m_seqMax(0)             // don't request anything
+  , m_retxNum(2)      // We allow retransmition twice
 {
   NS_LOG_FUNCTION_NOARGS();
 
@@ -217,8 +218,9 @@ Consumer::SendPacket()
 
   //------------------------------------------------------------------------
   //Debug -Yuwei
-  //cout<<"Send Interest="<<interest->getName()<<endl;
-  //Test
+  //cout<<"Send Interest="<<interest->getName()<<" Seq="<<seq<<endl;
+
+  /*Test
   Name tmpName1("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
   Name tmpName2("/S/NankaiDistrict/NanjingRoad/BinjiangStreet/A/TrafficInformer/RoadStatus");
   //interest->getName().CorrelativityWith(interest->getName());
@@ -229,6 +231,7 @@ Consumer::SendPacket()
 
   cout<<tmpName1.getSpcorrelativityWith(tmpName2)<<endl;
   cout<<tmpName2.getSpcorrelativityWith(tmpName1)<<endl;
+  */
 
   m_transmittedInterests(interest, this, m_face);
   m_face->onReceiveInterest(*interest);
@@ -253,18 +256,14 @@ Consumer::OnData(shared_ptr<const Data> data)
 
   // NS_LOG_INFO ("Received content object: " << boost::cref(*data));
 
-  //---------------------------------------------------------------------------------
-  //Yuwei
-  //cout<<"Get Data = "<<data->getName()<<endl;
-  //---------------------------------------------------------------------------------
-
   // This could be a problem......
   uint32_t seq = data->getName().at(-1).toSequenceNumber();
   NS_LOG_INFO("< DATA for " << seq);
 
   int hopCount = 0;
   auto ns3PacketTag = data->getTag<Ns3PacketTag>();
-  if (ns3PacketTag != nullptr) { // e.g., packet came from local node's cache
+  if (ns3PacketTag != nullptr)
+  { // e.g., packet came from local node's cache
     FwHopCountTag hopCountTag;
     if (ns3PacketTag->getPacket()->PeekPacketTag(hopCountTag)) {
       hopCount = hopCountTag.Get();
@@ -272,29 +271,37 @@ Consumer::OnData(shared_ptr<const Data> data)
     }
   }
 
+  //--------------------------------------------------------------------------------------------------
+  //Tracing
   SeqTimeoutsContainer::iterator entry = m_seqLastDelay.find(seq);
-  if (entry != m_seqLastDelay.end()) {
+  if (entry != m_seqLastDelay.end())
+  {
     m_lastRetransmittedInterestDataDelay(this, seq, Simulator::Now() - entry->time, hopCount);
   }
-
   entry = m_seqFullDelay.find(seq);
-  if (entry != m_seqFullDelay.end()) {
+  if (entry != m_seqFullDelay.end())
+  {
     m_firstInterestDataDelay(this, seq, Simulator::Now() - entry->time, m_seqRetxCounts[seq], hopCount);
   }
+  //----------------------------------------------------------------------------------------------------
 
-  m_seqRetxCounts.erase(seq);
-  m_seqFullDelay.erase(seq);
-  m_seqLastDelay.erase(seq);
+  m_seqRetxCounts.erase(seq);   //recording the transmission number of every seq
+  m_seqTimeouts.erase(seq);    //record all the packets with send time for timeout
+  m_retxSeqs.erase(seq);          //record the timeout seq , so consumer will send it later
 
-  m_seqTimeouts.erase(seq);
-  m_retxSeqs.erase(seq);
+  m_seqFullDelay.erase(seq);     //Tracing
+  m_seqLastDelay.erase(seq);    //Tracing
 
   //m_rtt->AckSeq(SequenceNumber32(seq));
   shared_ptr<Name> dataName = make_shared<Name>(data->getName());
-  //cout<<*dataName<<endl;
+
+  //---------------------------------------------------------------------------------
+  //Yuwei
+  cout<<"Get Data="<<data->getName()
+		  <<" Seq="<<seq
+		  <<endl;
+  //---------------------------------------------------------------------------------
   m_rtt->AckSeq(*dataName, SequenceNumber32(seq));
-  //string tmpName = "asdasdasda";
-  //m_rtt->AckInterest(SequenceNumber32(seq));
 }
 
 void
@@ -305,10 +312,27 @@ Consumer::OnTimeout(uint32_t sequenceNumber)
   // m_rtt->RetransmitTimeout ().ToDouble (Time::S) << "s\n";
 
   m_rtt->IncreaseMultiplier(); // Double the next RTO
-  //Yuwei need set name?
-  m_rtt->SentSeq(SequenceNumber32(sequenceNumber),1); // make sure to disable RTT calculation for this sample
-  m_retxSeqs.insert(sequenceNumber);
-  ScheduleNextPacket();
+
+  //-----------------------------------------------------------------------------------
+  //Yuwei
+
+  if(m_seqRetxCounts[sequenceNumber] < GetRetxNumber())
+  {
+	  //cout<<"SEQ: "<<sequenceNumber<<" transmitted "<<m_seqRetxCounts[sequenceNumber]<<"times."<<endl;
+	  m_rtt->SentSeq(SequenceNumber32(sequenceNumber),1); // make sure to disable RTT calculation for this sample
+	  m_retxSeqs.insert(sequenceNumber);     //insert data into retransmitted table
+	  ScheduleNextPacket();
+  }
+  else
+  {
+	  cout<<"Discard! "<<sequenceNumber<<" = "<<m_seqRetxCounts[sequenceNumber]<<endl;
+	  //discard this interest
+	  m_seqRetxCounts.erase(sequenceNumber);   //recording the transmission number of every seq
+	  m_seqFullDelay.erase(sequenceNumber);     //Tracing
+	  m_seqLastDelay.erase(sequenceNumber);    //Tracing
+	  m_seqTimeouts.erase(sequenceNumber);    //record all the packets with send time for timeout
+	  m_rtt->DiscardInterestBySeq(SequenceNumber32(sequenceNumber));     //delete record in rtthistory
+  }
 }
 
 void
@@ -349,6 +373,18 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 	  //m_rtt->SentSeq(SequenceNumber32(sequenceNumber), 1);
 	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1);
 }
+//-----------------------------------------------------------------------------------------------
+void
+Consumer::SetRetxNumber(uint32_t num)
+{
+	m_retxNum = num;
+}
+uint32_t
+Consumer::GetRetxNumber() const
+{
+	return m_retxNum;
+}
+
 //=======================================================
 } // namespace ndn
 } // namespace ns3

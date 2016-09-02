@@ -110,6 +110,7 @@ RttHistory::RttHistory(SequenceNumber32 s, uint32_t c, Time t)
   : seq(s)
   , count(c)
   , time(t)
+  , rcvTime(t)
   , retx(false)
   , name("\11\22\33\44\55\66")   //Yuwei
 {
@@ -120,6 +121,7 @@ RttHistory::RttHistory(SequenceNumber32 s, uint32_t c, Time t, Name n)
   : seq(s)
   , count(c)
   , time(t)
+  , rcvTime(t)
   , retx(false)
   , name(n)
 {
@@ -131,6 +133,7 @@ RttHistory::RttHistory(const RttHistory& h)
   : seq(h.seq)
   , count(h.count)
   , time(h.time)
+  , rcvTime(h.rcvTime)
   , retx(h.retx)
   , name(h.name)
 {
@@ -273,10 +276,13 @@ RttEstimator::Reset()
   m_nSamples = 0;
   ResetMultiplier();
 }
-
+//==================================================================
+//Yuwei
 double
- RttEstimator::GetTmpcorrelativity(Time curTime, Time rcvTime)const{
+RttEstimator::GetTmpcorrelativity(Time curTime, Time rcvTime)const
+{
 	return exp(rcvTime.ToDouble(Time::S)-curTime.ToDouble(Time::S));
 }
+
 } // namespace ndn
 } // namespace ns3

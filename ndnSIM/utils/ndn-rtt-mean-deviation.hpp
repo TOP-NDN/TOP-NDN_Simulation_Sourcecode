@@ -62,6 +62,10 @@ public:
   //Yuwei
   void
   SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size);
+
+  void
+  DiscardInterestBySeq(SequenceNumber32 disSeq);
+
   //---------------------------------------------------------------------------------------------
   Time
   AckInterest(SequenceNumber32 ackSeq);

@@ -55,8 +55,9 @@ public:
 public:
   SequenceNumber32 seq; // First sequence number in packet sent
   uint32_t count;       // Number of bytes sent
-  Time time;            // Time this one was sent
-  bool retx;            // True if this has been retransmitted
+  Time time;              // Send Time
+  Time rcvTime;        // receive Time
+  bool retx;              // True if this has been retransmitted
   //Add the name of this interest
   //Yuwei
   Name name;   //name of this interest packet
@@ -94,8 +95,11 @@ public:
   //Yuwei
   virtual void
   SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size)=0;
-  //=====================================================
 
+  virtual void
+  DiscardInterestBySeq(SequenceNumber32 disSeq)=0;
+
+  //=====================================================
   /**
    * \brief Note that a particular ack sequence has been received
    * \param ackSeq the ack sequence number.
