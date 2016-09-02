@@ -100,7 +100,7 @@ public:
   DiscardInterestBySeq(SequenceNumber32 disSeq)=0;
 
   virtual double
-  CalRTObyCorrelativity(void)=0;
+  CalRTObyCorrelativity(Name name)=0;
 
   //=====================================================
   /**

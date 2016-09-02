@@ -116,6 +116,7 @@ RttMeanDeviation::RetransmitTimeout()
 
   NS_LOG_DEBUG("RetransmitTimeout:  return " << retval);
 
+
   return Seconds(retval);
 }
 
@@ -199,11 +200,35 @@ RttMeanDeviation::DiscardInterestBySeq(SequenceNumber32 disSeq)
 }
 //----------------------------------------------------------------------------------------------------------------
 double
-RttMeanDeviation::CalRTObyCorrelativity(void)
+RttMeanDeviation::CalRTObyCorrelativity(Name n)
 {
 	//SiYan Yao
-	double result=0.0;
-	return result;
+	double sc=0.0,ac=0.0,tc=0.0,retval=0.0;
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if(i->rcvTime!=i->time)
+		{
+			cout<<"have received..."<<i->name<<endl;
+			sc+=n.getAppcorrelativityWith(i->name);
+		    ac+=n.getSpcorrelativityWith(i->name);
+		    tc+=GetTmpcorrelativity(Simulator::Now(),i->rcvTime);
+		}
+	}
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+		{
+			if(i->rcvTime!=i->time)
+			{
+				cout<<"have received..."<<endl;
+				double sci=n.getAppcorrelativityWith(i->name);
+			    double aci=n.getSpcorrelativityWith(i->name);
+			    double tci=GetTmpcorrelativity(Simulator::Now(),i->rcvTime);
+			    Time rtti=i->rcvTime-i->time;
+			    cout<<"current rtt is  "<<rtti<<endl;
+			    retval+=rtti.ToDouble(Time::S)*(sci*ac*tc+aci*sc*tc+tci*sc*ac)/(3*sc*ac*tc);
+			}
+		}
+	//double result=0.0;
+	return retval;
 }
 //=====================================================
 
@@ -244,6 +269,8 @@ RttMeanDeviation::AckSeq(Name name, SequenceNumber32 ackSeq)
         cout<<"-----------------------------------"<<endl;
         //---------------------------------------------------------------------------------------------
         Measurement(m);                      // Log the measurement
+        //2016.9.02
+        cout<<i->name<<"   rto="<<CalRTObyCorrelativity(i->name)<<endl;
         ResetMultiplier();              // Reset multiplier on valid measurement
       }
       else
