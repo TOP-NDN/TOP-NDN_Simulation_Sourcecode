@@ -82,7 +82,7 @@ Consumer::Consumer()
   : m_rand(CreateObject<UniformRandomVariable>())
   , m_seq(0)
   , m_seqMax(0)             // don't request anything
-  , m_retxNum(2)      // We allow retransmition twice
+  , m_retxNum(3)      // We allow retransmition twice
 {
   NS_LOG_FUNCTION_NOARGS();
 
@@ -232,6 +232,7 @@ Consumer::SendPacket()
   cout<<tmpName1.getSpcorrelativityWith(tmpName2)<<endl;
   cout<<tmpName2.getSpcorrelativityWith(tmpName1)<<endl;
   */
+  cout<<"RTO by C0="<<m_rtt->CalRTObyCorrelativity(interest->getName()).ToDouble(Time::S)<<endl;
 
   m_transmittedInterests(interest, this, m_face);
   m_face->onReceiveInterest(*interest);
@@ -325,7 +326,7 @@ Consumer::OnTimeout(uint32_t sequenceNumber)
   }
   else
   {
-	  cout<<"Discard! "<<sequenceNumber<<" = "<<m_seqRetxCounts[sequenceNumber]<<endl;
+	  //cout<<"Discard! "<<sequenceNumber<<" = "<<m_seqRetxCounts[sequenceNumber]<<endl;
 	  //discard this interest
 	  m_seqRetxCounts.erase(sequenceNumber);   //recording the transmission number of every seq
 	  m_seqFullDelay.erase(sequenceNumber);     //Tracing

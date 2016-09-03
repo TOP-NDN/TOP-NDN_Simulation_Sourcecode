@@ -116,7 +116,6 @@ RttMeanDeviation::RetransmitTimeout()
 
   NS_LOG_DEBUG("RetransmitTimeout:  return " << retval);
 
-
   return Seconds(retval);
 }
 
@@ -199,36 +198,65 @@ RttMeanDeviation::DiscardInterestBySeq(SequenceNumber32 disSeq)
 	}
 }
 //----------------------------------------------------------------------------------------------------------------
-double
-RttMeanDeviation::CalRTObyCorrelativity(Name n)
+Time
+RttMeanDeviation::CalRTObyCorrelativity(Name name)
 {
 	//SiYan Yao
-	double sc=0.0,ac=0.0,tc=0.0,retval=0.0;
-	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	CoHistory_t coList;
+	CoHistory_t::iterator i;
+	double sc=0.0,ac=0.0,tc=0.0,rtoValue=0.0;
+	double scSum=0.0, acSum=0.0, tcSum=0.0;
+	Time tmpRtt;
+	Time timeDiff;
+
+	if(m_history.size()==0)
 	{
-		if(i->rcvTime!=i->time)
-		{
-			cout<<"have received..."<<i->name<<endl;
-			sc+=n.getAppcorrelativityWith(i->name);
-		    ac+=n.getSpcorrelativityWith(i->name);
-		    tc+=GetTmpcorrelativity(Simulator::Now(),i->rcvTime);
-		}
+		return Seconds(0.0);
 	}
-	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	else
+	{
+		//Update with 3 minutes
+		UpateRttHistory(3.0);
+		for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
 		{
-			if(i->rcvTime!=i->time)
+			if(i->rcvTime > i->time)
 			{
-				cout<<"have received..."<<endl;
-				double sci=n.getAppcorrelativityWith(i->name);
-			    double aci=n.getSpcorrelativityWith(i->name);
-			    double tci=GetTmpcorrelativity(Simulator::Now(),i->rcvTime);
-			    Time rtti=i->rcvTime-i->time;
-			    cout<<"current rtt is  "<<rtti<<endl;
-			    retval+=rtti.ToDouble(Time::S)*(sci*ac*tc+aci*sc*tc+tci*sc*ac)/(3*sc*ac*tc);
+				timeDiff = Simulator::Now() - i->rcvTime;
+				if(timeDiff.ToDouble(Time::MIN)<=3)  //3 minutes
+				{
+					//cout<<"Have received..."<<i->name;
+					sc=name.getAppcorrelativityWith(i->name);
+					ac=name.getSpcorrelativityWith(i->name);
+					tc=GetTmpcorrelativity(Simulator::Now(), i->rcvTime);
+					//cout<<"sc="<<sc;
+					//cout<<",ac="<<ac;
+					//cout<<",tc="<<tc<<endl;
+					//----------------------------------------------------------------------------------
+					if(sc>0.0 || ac>0.0)
+					{
+						tmpRtt = i->rcvTime-i->time;
+						coList.push_back(CorrelativityRcd(sc,ac,tc,tmpRtt));
+						scSum+=sc;
+						acSum+=ac;
+						tcSum+=tc;
+					}
+				}
 			}
 		}
-	//double result=0.0;
-	return retval;
+		//------------------------------------------------------------------------------------------------------
+		if(coList.size()>0)
+		{
+			//cout<<",scSum="<<scSum;
+			//cout<<",acSum="<<acSum;
+			//cout<<",tcSum="<<tcSum<<endl;
+			for(i=coList.begin();i!=coList.end();++i)
+			{
+				//cout<<i->rtt.ToDouble(Time::S)<<endl;
+				rtoValue+=i->rtt.ToDouble(Time::S)*(i->sCo*acSum*tcSum+i->aCo*scSum*tcSum+i->tCo*scSum*acSum)/(3.0*scSum*acSum*tcSum);
+			}
+		}
+		return Seconds(rtoValue);
+	}
 }
 //=====================================================
 
@@ -263,14 +291,12 @@ RttMeanDeviation::AckSeq(Name name, SequenceNumber32 ackSeq)
     	i->rcvTime = Simulator::Now();
     	//---------------------------------------------------------------------------------------------
         m = i->rcvTime - i->time; // Elapsed time
-        cout<<i->time<<endl;
-        cout<<i->rcvTime<<endl;
-        cout<<m.ToDouble(Time::MS)<<endl;
-        cout<<"-----------------------------------"<<endl;
+        //cout<<i->time<<endl;
+        //cout<<i->rcvTime<<endl;
+        //cout<<m.ToDouble(Time::MS)<<endl;
+        //cout<<"-----------------------------------"<<endl;
         //---------------------------------------------------------------------------------------------
         Measurement(m);                      // Log the measurement
-        //2016.9.02
-        cout<<i->name<<"   rto="<<CalRTObyCorrelativity(i->name)<<endl;
         ResetMultiplier();              // Reset multiplier on valid measurement
       }
       else

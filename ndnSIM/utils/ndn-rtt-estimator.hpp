@@ -63,7 +63,22 @@ public:
   Name name;   //name of this interest packet
 };
 
+//==================================================================
+//Yuwei
+class CorrelativityRcd
+{
+public:
+	CorrelativityRcd(double sc, double ac, double tc, Time t);
+public:
+	double sCo;
+	double aCo;
+	double tCo;
+	Time rtt;
+};
+
+//==================================================================
 typedef std::deque<RttHistory> RttHistory_t;
+typedef std::list<CorrelativityRcd> CoHistory_t;
 
 /**
  * \ingroup tcp
@@ -99,7 +114,7 @@ public:
   virtual void
   DiscardInterestBySeq(SequenceNumber32 disSeq)=0;
 
-  virtual double
+  virtual Time
   CalRTObyCorrelativity(Name name)=0;
 
   //=====================================================
@@ -199,6 +214,9 @@ public:
   //Siyan Yao
   double
   GetTmpcorrelativity(Time curTime, Time rcvTime)const;
+
+  void
+  UpateRttHistory(double min);
 
 private:
   SequenceNumber32 m_next; // Next expected sequence to be sent

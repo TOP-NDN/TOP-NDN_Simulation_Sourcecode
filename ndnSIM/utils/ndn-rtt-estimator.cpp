@@ -127,7 +127,6 @@ RttHistory::RttHistory(SequenceNumber32 s, uint32_t c, Time t, Name n)
 {
   NS_LOG_FUNCTION(this);
 }
-//=======================================================================
 
 RttHistory::RttHistory(const RttHistory& h)
   : seq(h.seq)
@@ -139,6 +138,16 @@ RttHistory::RttHistory(const RttHistory& h)
 {
   NS_LOG_FUNCTION(this);
 }
+
+CorrelativityRcd::CorrelativityRcd(double sc, double ac, double tc, Time t)
+  : sCo(sc)
+  , aCo(ac)
+  , tCo(tc)
+  , rtt(t)
+{
+	NS_LOG_FUNCTION(this);
+}
+//=======================================================================
 
 // Base class methods
 
@@ -281,7 +290,23 @@ RttEstimator::Reset()
 double
 RttEstimator::GetTmpcorrelativity(Time curTime, Time rcvTime)const
 {
-	return exp(rcvTime.ToDouble(Time::S)-curTime.ToDouble(Time::S));
+	Time timeDiff=curTime-rcvTime;
+	//cout<<timeDiff.ToDouble(Time::MIN)<<",";
+	return exp(-timeDiff.ToDouble(Time::MIN));
+}
+
+void
+RttEstimator::UpateRttHistory(double min)
+{
+	Time timeDiff;
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		timeDiff = Simulator::Now() - i->rcvTime;
+		if(timeDiff.ToDouble(Time::MIN)>min)  //min minutes
+		{
+			m_history.erase(i);
+		}
+	}
 }
 
 } // namespace ndn

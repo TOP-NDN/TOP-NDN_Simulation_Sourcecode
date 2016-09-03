@@ -66,7 +66,7 @@ public:
   void
   DiscardInterestBySeq(SequenceNumber32 disSeq);
 
-  double
+  Time
   CalRTObyCorrelativity(Name name);
 
   //---------------------------------------------------------------------------------------------
