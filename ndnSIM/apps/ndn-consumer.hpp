@@ -101,6 +101,9 @@ public:
   //Yuwei
   virtual void
   WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name);
+
+  void
+  SetPrefix(string pre);
   //=======================================================
   //Set the number of retransmit for every interest
   void

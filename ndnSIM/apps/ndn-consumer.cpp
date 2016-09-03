@@ -218,7 +218,7 @@ Consumer::SendPacket()
 
   //------------------------------------------------------------------------
   //Debug -Yuwei
-  //cout<<"Send Interest="<<interest->getName()<<" Seq="<<seq<<endl;
+  cout<<"Send Interest="<<interest->getName()<<" Seq="<<seq<<endl;
 
   /*Test
   Name tmpName1("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
@@ -232,7 +232,7 @@ Consumer::SendPacket()
   cout<<tmpName1.getSpcorrelativityWith(tmpName2)<<endl;
   cout<<tmpName2.getSpcorrelativityWith(tmpName1)<<endl;
   */
-  cout<<"RTO by C0="<<m_rtt->CalRTObyCorrelativity(interest->getName()).ToDouble(Time::S)<<endl;
+  //cout<<"RTO by C0="<<m_rtt->CalRTObyCorrelativity(interest->getName()).ToDouble(Time::S)<<endl;
 
   m_transmittedInterests(interest, this, m_face);
   m_face->onReceiveInterest(*interest);
@@ -296,11 +296,12 @@ Consumer::OnData(shared_ptr<const Data> data)
   //m_rtt->AckSeq(SequenceNumber32(seq));
   shared_ptr<Name> dataName = make_shared<Name>(data->getName());
 
-  //---------------------------------------------------------------------------------
+  /*---------------------------------------------------------------------------------
   //Yuwei
   cout<<"Get Data="<<data->getName()
 		  <<" Seq="<<seq
-		  <<endl;
+		  <<" Time="<<Simulator::Now().ToDouble(Time::S)
+		  <<endl;*/
   //---------------------------------------------------------------------------------
   m_rtt->AckSeq(*dataName, SequenceNumber32(seq));
 }
@@ -374,6 +375,15 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 	  //m_rtt->SentSeq(SequenceNumber32(sequenceNumber), 1);
 	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1);
 }
+void
+Consumer::SetPrefix(string pre)
+{
+	m_interestName.clear();
+	cout<<m_interestName<<endl;
+	m_interestName.set(pre);
+	cout<<m_interestName<<endl;
+}
+
 //-----------------------------------------------------------------------------------------------
 void
 Consumer::SetRetxNumber(uint32_t num)
