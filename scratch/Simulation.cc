@@ -93,7 +93,21 @@ int main (int argc, char *argv[])
   // Consumer will request /prefix/0, /prefix/1, ...
   consumerHelper.SetPrefix("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
   consumerHelper.SetAttribute("Frequency", StringValue("1.0"));  //1 interests a second
-  consumerHelper.Install(c.Get(0));
+  //consumerHelper.Install(c.Get(0));
+  ApplicationContainer consumerApp = consumerHelper.Install(c.Get(0));
+  consumerApp.Start(Seconds(0));
+  consumerApp.Stop(Seconds(100));
+  //consumerApp = consumerHelper.Install(c.Get(100));
+  //consumerApp.Start(Seconds(710));
+  //consumerApp.Stop(Seconds(950));
+  //------------------------------------------------------------------------------------------
+  ndn::AppHelper consumerHelper2("ns3::ndn::ConsumerRandomCbr");
+  // Consumer will request /prefix/0, /prefix/1, ...
+  consumerHelper2.SetPrefix("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
+  consumerHelper2.SetAttribute("Frequency", StringValue("1.0"));  //1 interests a second
+  ApplicationContainer consumerApp2 = consumerHelper2.Install(c.Get(100));
+  consumerApp2.Start(Seconds(710));
+  consumerApp2.Stop(Seconds(950));
 
   // Producer
   ndn::AppHelper producerHelper("ns3::ndn::Producer");
