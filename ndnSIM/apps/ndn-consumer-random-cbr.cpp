@@ -28,7 +28,8 @@
 #include "ns3/uinteger.h"
 #include "ns3/integer.h"
 #include "ns3/double.h"
-
+#include<time.h>
+#include<cstdlib>
 #include "model/ndn-app-face.hpp"
 
 NS_LOG_COMPONENT_DEFINE("ndn.ConsumerRandomCbr");
@@ -43,8 +44,104 @@ NsNode::NsNode(string str)
 	//m_element = str;
 	NS_LOG_FUNCTION(this);
 }
+void NsNode::CreateChilds(unsigned short num)
+{
+	for (int i = 0; i < num; i++)
+	{
+		stringstream ss;
+		ss << i;
+		string str_i = m_element + "_" + ss.str();
+		NsNode* child_i = new NsNode(str_i);
+		p_childs.push_back(child_i);
+	}
+}
+
+string NsNode::GetString(void)
+{
+	return m_element;
+}
+
+NsNode * NsNode::GetChildByIndex(unsigned short num)
+{
+	// TODO: 在此处插入 return 语句
+	list<NsNode*>::iterator child=p_childs.begin();
+	for (int i = 0; i < num; i++)
+		if (child != p_childs.end())
+			++child;
+	return *child;
+}
+
+unsigned short NsNode::GetChildNum(void)
+{
+	return p_childs.size();
+}
+/*
+void NsNode::SetParent(NsNode &p)
+{
+	parent = &p;
+}
+*/
+
+NsTree::NsTree(string root)
+{
+	this->root = new NsNode(root);
+	this->prefix = "";
+
+	//nodes.push_back(new NsNode(root));
+}
+
+void NsTree::InitBuild(unsigned short levels, unsigned short maxChilds)
+{
+	this->levels = levels;
+	Build(root, levels, maxChilds);
+}
+
+void NsTree::Build(NsNode * r, unsigned short levels, unsigned short maxChilds)
+{
+	if (levels == 0)
+		return;
+	r->CreateChilds(maxChilds);
+	for (int i = 0; i < r->GetChildNum(); i++)
+	{
+		Build(r->GetChildByIndex(i), levels - 1, maxChilds);
+	}
+}
+
+string NsTree::GetName(NsNode * node, unsigned int levels)
+{
+	//string prefix0 = "";
+	if (levels == 0)
+		return prefix;
+	else {
+		string prefix0 = "/" + node->GetString();
+		//
+		//cout << "ChildNum" << node->GetChildNum() << endl;
+		int i = rand() % (node->GetChildNum());
+		//cout << "i=" <<i<< endl;
+		prefix = prefix0+GetName(node->GetChildByIndex(i), levels - 1);
+			//+ "/" + node->GetString();
+		//cout << prefix0 << endl;
+		//cout << "prefix:" << prefix << endl;
+		return prefix;
+			}
+	return prefix;
+}
 
 
+string NsTree::GetRandomName(void)
+{
+	//string prefix="";
+	//string prefix0 = "/";
+	//prefix +=prefix0+ root->GetString();
+
+	string prefix0 = GetName(root, this->GetLevels());
+	return prefix;
+}
+
+int NsTree::GetLevels()
+{
+	return this->levels;
+}
 
 //==================================================================================================
 NS_OBJECT_ENSURE_REGISTERED(ConsumerRandomCbr);
@@ -91,7 +188,15 @@ void
 ConsumerRandomCbr::ScheduleNextPacket()
 {
 	//Yuwei
-	SetPrefix("/S/NankaiDistrict/FukangRoad/A/TrafficInformer/RoadCongestion");
+	//srand((unsigned)time(NULL));
+	NsTree tree1= NsTree("Application");
+	tree1.InitBuild(3, 4);
+	NsTree tree2=NsTree("Location");
+	tree2.InitBuild(2,3);
+	string prefix="/S"+tree2.GetRandomName()+"/A"+tree1.GetRandomName();
+	//cout << tree.GetRandomName() << endl;
+	//SetPrefix("/S/NankaiDistrict/FukangRoad/A/TrafficInformer/RoadCongestion");
+	SetPrefix(prefix);
 	//===============================================================================
 
   if (m_firstTime) {

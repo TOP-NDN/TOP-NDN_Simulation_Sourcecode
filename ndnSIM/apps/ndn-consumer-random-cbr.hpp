@@ -31,22 +31,28 @@ namespace ndn {
 class NsNode{
 public:
 	NsNode(string str);
-	void GreateChilds(unsigned short num);
+	void CreateChilds(unsigned short num);
 	string GetString(void);
-	NsNode& GetChildByIndex(unsigned short i);
+	NsNode* GetChildByIndex(unsigned short i);
 	unsigned short GetChildNum(void);
 private:
 	string m_element;
-	NsNode **p_childs;
+	list<NsNode*> p_childs;
+	//NsNode **p_childs;
 };
 
 class NsTree{
 public:
 	NsTree(string root);
-	void Build(unsigned short levels, unsigned short maxChilds);
+	void InitBuild(unsigned short levels, unsigned short maxChilds);
+	void Build(NsNode* r,unsigned short levels, unsigned short maxChilds);
+	string GetName(NsNode* node, unsigned int levels);
 	string GetRandomName(void);
+	int GetLevels();
 private:
-
+		NsNode* root;
+		int levels;
+		string prefix;
 };
 //============================================================================
 /**
