@@ -31,6 +31,7 @@ namespace ndn {
 class NsNode{
 public:
 	NsNode(string str);
+	~NsNode();
 	void CreateChilds(unsigned short num);
 	string GetString(void);
 	NsNode* GetChildByIndex(unsigned short i);
@@ -44,6 +45,7 @@ private:
 class NsTree{
 public:
 	NsTree(string root);
+	~NsTree();
 	void InitBuild(unsigned short levels, unsigned short maxChilds);
 	void Build(NsNode* r,unsigned short levels, unsigned short maxChilds);
 	string GetName(NsNode* node, unsigned int levels);

@@ -44,6 +44,14 @@ NsNode::NsNode(string str)
 	//m_element = str;
 	NS_LOG_FUNCTION(this);
 }
+NsNode::~NsNode()
+{
+	for(list<NsNode*>::iterator it=p_childs.begin();it!=p_childs.end();it++)
+		{
+		cout<<"delete node"<<*it;
+			delete *it;
+		}
+}
 void NsNode::CreateChilds(unsigned short num)
 {
 	for (int i = 0; i < num; i++)
@@ -88,7 +96,12 @@ NsTree::NsTree(string root)
 
 	//nodes.push_back(new NsNode(root));
 }
-
+NsTree::~NsTree()
+{
+	cout<<"delete root";
+	//root->~NsNode();
+	delete root;
+}
 void NsTree::InitBuild(unsigned short levels, unsigned short maxChilds)
 {
 	this->levels = levels;
@@ -132,7 +145,7 @@ string NsTree::GetRandomName(void)
 	//string prefix="";
 	//string prefix0 = "/";
 	//prefix +=prefix0+ root->GetString();
-
+    prefix="";
 	string prefix0 = GetName(root, this->GetLevels());
 	return prefix;
 }
@@ -193,14 +206,18 @@ void
 ConsumerRandomCbr::ScheduleNextPacket()
 {
 	//Yuwei
-	/*srand((unsigned)time(NULL));
+
+	//srand((unsigned)time(NULL));
+	//测试是否能析构
+	/*
 	NsTree tree1= NsTree("location");
 	tree1.InitBuild(3, 4);
 	NsTree tree2=NsTree("app");
 	tree2.InitBuild(2,3);
-	*/
+    */
 	string prefix="/S"+sNameTree.GetRandomName()+"/A"+aNameTree.GetRandomName();
-	//cout << tree.GetRandomName() << endl;
+	//cout << tree1.GetRandomName() << endl;
+	//cout << tree2.GetRandomName() << endl;
 	//SetPrefix("/S/NankaiDistrict/FukangRoad/A/TrafficInformer/RoadCongestion");
 	SetPrefix(prefix);
 	//===============================================================================
