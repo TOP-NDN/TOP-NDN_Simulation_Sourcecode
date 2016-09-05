@@ -99,6 +99,10 @@ protected:
   bool m_firstTime;
   Ptr<RandomVariableStream> m_random;
   std::string m_randomType;
+  //==========================================
+  NsTree aNameTree;
+  NsTree sNameTree;
+
 };
 
 } // namespace ndn
