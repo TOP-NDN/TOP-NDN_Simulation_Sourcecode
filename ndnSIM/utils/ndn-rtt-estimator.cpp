@@ -110,6 +110,7 @@ RttHistory::RttHistory(SequenceNumber32 s, uint32_t c, Time t)
   : seq(s)
   , count(c)
   , time(t)
+  , rto(0)
   , rcvTime(t)
   , retx(false)
   , name("\11\22\33\44\55\66")   //Yuwei
@@ -117,10 +118,11 @@ RttHistory::RttHistory(SequenceNumber32 s, uint32_t c, Time t)
   NS_LOG_FUNCTION(this);
 }
 
-RttHistory::RttHistory(SequenceNumber32 s, uint32_t c, Time t, Name n)
+RttHistory::RttHistory(SequenceNumber32 s, uint32_t c, Time t, Time r, Name n)
   : seq(s)
   , count(c)
   , time(t)
+  , rto(r)
   , rcvTime(t)
   , retx(false)
   , name(n)
@@ -132,6 +134,7 @@ RttHistory::RttHistory(const RttHistory& h)
   : seq(h.seq)
   , count(h.count)
   , time(h.time)
+  , rto(h.rto)
   , rcvTime(h.rcvTime)
   , retx(h.retx)
   , name(h.name)
@@ -307,6 +310,21 @@ RttEstimator::UpateRttHistory(double min)
 			m_history.erase(i);
 		}
 	}
+}
+
+Time
+RttEstimator::GetRtobySeq(SequenceNumber32 seq)
+{
+	Time rto(0);
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if(i->seq == seq)
+		{
+			rto =i->rto;
+			break;
+		}
+	}
+	return rto;
 }
 
 } // namespace ndn

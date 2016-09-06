@@ -28,6 +28,7 @@ namespace ns3 {
 namespace ndn {
 
 //============================================================================
+// Random Cbr Name Tree
 class NsNode{
 public:
 	NsNode(string str);
@@ -36,25 +37,25 @@ public:
 	string GetString(void);
 	NsNode* GetChildByIndex(unsigned short i);
 	unsigned short GetChildNum(void);
+	void Print(void);
 private:
 	string m_element;
 	list<NsNode*> p_childs;
-	//NsNode **p_childs;
 };
 
 class NsTree{
 public:
-	NsTree(string root);
+	NsTree(string r);
 	~NsTree();
 	void InitBuild(unsigned short levels, unsigned short maxChilds);
 	void Build(NsNode* r,unsigned short levels, unsigned short maxChilds);
 	string GetName(NsNode* node, unsigned int levels);
 	string GetRandomName(void);
 	int GetLevels();
+	void Print(void);
 private:
 		NsNode* root;
 		int levels;
-		string prefix;
 };
 //============================================================================
 /**

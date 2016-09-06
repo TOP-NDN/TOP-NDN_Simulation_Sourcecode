@@ -170,6 +170,7 @@ protected:
   //----------------------------------------------------------------------------------
   //Yuwei
   uint32_t m_retxNum;        ///number of retransmit for every interest
+  bool m_isSameWithLastInterest;
 
   /// @cond include_hidden
   /**

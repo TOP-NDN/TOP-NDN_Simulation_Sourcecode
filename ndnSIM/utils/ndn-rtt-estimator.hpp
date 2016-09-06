@@ -50,13 +50,14 @@ namespace ndn {
 class RttHistory {
 public:
   RttHistory(SequenceNumber32 s, uint32_t c, Time t);
-  RttHistory(SequenceNumber32 s, uint32_t c, Time t, Name n);
+  RttHistory(SequenceNumber32 s, uint32_t c, Time t, Time r, Name n);
   RttHistory(const RttHistory& h); // Copy constructor
 public:
   SequenceNumber32 seq; // First sequence number in packet sent
   uint32_t count;       // Number of bytes sent
   Time time;              // Send Time
   Time rcvTime;        // receive Time
+  Time rto;                // the rto value estimated before send, Yuwei
   bool retx;              // True if this has been retransmitted
   //Add the name of this interest
   //Yuwei
@@ -109,7 +110,7 @@ public:
   //=====================================================
   //Yuwei
   virtual void
-  SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size)=0;
+  SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size, Time rto)=0;
 
   virtual void
   DiscardInterestBySeq(SequenceNumber32 disSeq)=0;
@@ -217,6 +218,9 @@ public:
 
   void
   UpateRttHistory(double min);
+
+  Time
+  GetRtobySeq(SequenceNumber32 seq);
 
 private:
   SequenceNumber32 m_next; // Next expected sequence to be sent

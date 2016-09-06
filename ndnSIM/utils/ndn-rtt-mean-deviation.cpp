@@ -166,22 +166,24 @@ RttMeanDeviation::SentSeq(SequenceNumber32 seq, uint32_t size)
 //======================================================
 //Yuwei
 void
-RttMeanDeviation::SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size)
+RttMeanDeviation::SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size, Time rto)
 {
-	  NS_LOG_FUNCTION(this << seq << size);
-	  //cout<<"RttEstimator=="<<name.toUri()<<endl;
+	NS_LOG_FUNCTION(this << seq << size);
+	//cout<<"RttEstimator=="<<name.toUri()<<endl;
 
-	  RttHistory_t::iterator i;
-	  for (i = m_history.begin(); i != m_history.end(); ++i) {
-	    if (seq == i->seq)
+	RttHistory_t::iterator i;
+	for (i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if (seq == i->seq)
 	    { // Found it
 	      i->retx = true;
 	      break;
 	    }
-	  }
-	  // Note that a particular sequence has been sent
-	  if (i == m_history.end())
-	    m_history.push_back(RttHistory(seq, size, Simulator::Now(), name));
+	}
+
+	// Note that a particular sequence has been sent
+	if (i == m_history.end())
+	    m_history.push_back(RttHistory(seq, size, Simulator::Now(), rto, name));
 }
 //----------------------------------------------------------------------------------------------------------------
 void
@@ -211,7 +213,8 @@ RttMeanDeviation::CalRTObyCorrelativity(Name name)
 
 	if(m_history.size()==0)
 	{
-		return Seconds(0.0);
+		//return Seconds(0.0);
+		rtoValue=0.0;
 	}
 	else
 	{
@@ -255,8 +258,11 @@ RttMeanDeviation::CalRTObyCorrelativity(Name name)
 				rtoValue+=i->rtt.ToDouble(Time::S)*(i->sCo*acSum*tcSum+i->aCo*scSum*tcSum+i->tCo*scSum*acSum)/(3.0*scSum*acSum*tcSum);
 			}
 		}
-		return Seconds(rtoValue);
 	}
+
+	double retval = std::min(m_maxRto.ToDouble(Time::S),
+	                          std::max(m_minRto.ToDouble(Time::S), rtoValue));
+	return Seconds(retval);
 }
 //=====================================================
 
@@ -310,6 +316,22 @@ RttMeanDeviation::AckSeq(Name name, SequenceNumber32 ackSeq)
   }
   return m;
 }
+
+/*
+Time
+RttMeanDeviation::GetRtobySeq(SequenceNumber32 seq)
+{
+	Time rto(0);
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if(i->seq == seq)
+		{
+			rto =i->rto;
+			break;
+		}
+	}
+	return rto;
+}*/
 
 //======================================================
 //Yuwei

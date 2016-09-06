@@ -83,6 +83,7 @@ Consumer::Consumer()
   , m_seq(0)
   , m_seqMax(0)             // don't request anything
   , m_retxNum(3)      // We allow retransmition twice
+  , m_isSameWithLastInterest(true)
 {
   NS_LOG_FUNCTION_NOARGS();
 
@@ -116,17 +117,21 @@ Consumer::CheckRetxTimeout()
   Time now = Simulator::Now();
 
   //Get the RTO value from RTTestimator
-  Time rto = m_rtt->RetransmitTimeout();
+  //Time rto = m_rtt->RetransmitTimeout();
+  Time rto;
   // NS_LOG_DEBUG ("Current RTO: " << rto.ToDouble (Time::S) << "s");
 
   while (!m_seqTimeouts.empty())
   {
     SeqTimeoutsContainer::index<i_timestamp>::type::iterator entry =
       m_seqTimeouts.get<i_timestamp>().begin();
+    uint32_t seqNo = entry->seq;
+    //Get Rto value from RttHistory
+    rto = m_rtt->GetRtobySeq(SequenceNumber32(seqNo));
     // timeout expired?
     if (entry->time + rto <= now)
     {
-      uint32_t seqNo = entry->seq;
+      //uint32_t seqNo = entry->seq;
       m_seqTimeouts.get<i_timestamp>().erase(entry);
       OnTimeout(seqNo);
     }
@@ -296,12 +301,12 @@ Consumer::OnData(shared_ptr<const Data> data)
   //m_rtt->AckSeq(SequenceNumber32(seq));
   shared_ptr<Name> dataName = make_shared<Name>(data->getName());
 
-  /*---------------------------------------------------------------------------------
+  //---------------------------------------------------------------------------------
   //Yuwei
   cout<<"Get Data="<<data->getName()
 		  <<" Seq="<<seq
 		  <<" Time="<<Simulator::Now().ToDouble(Time::S)
-		  <<endl;*/
+		  <<endl;
   //---------------------------------------------------------------------------------
   m_rtt->AckSeq(*dataName, SequenceNumber32(seq));
 }
@@ -373,15 +378,31 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 	  m_seqRetxCounts[sequenceNumber]++;
 
 	  //m_rtt->SentSeq(SequenceNumber32(sequenceNumber), 1);
-	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1);
+	  //Time rto
+	  //==================================================================================
+	  //Calculate RTO
+	  Time rto;
+	  if(!m_isSameWithLastInterest)
+	  {
+		  //RTO by Correlativity
+		  rto = m_rtt->CalRTObyCorrelativity(name);
+	  }
+	  else
+	  {
+		  //TCP RTO
+		  rto = m_rtt->RetransmitTimeout();
+	  }
+	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1, rto);
 }
 void
 Consumer::SetPrefix(string pre)
 {
+	Name tmpName(pre);
 	m_interestName.clear();
-	cout<<m_interestName<<endl;
-	m_interestName.set(pre);
-	cout<<m_interestName<<endl;
+	//cout<<m_interestName<<endl;
+	//m_interestName.set(pre);
+	m_interestName = tmpName;
+	//cout<<m_interestName<<endl;
 }
 
 //-----------------------------------------------------------------------------------------------

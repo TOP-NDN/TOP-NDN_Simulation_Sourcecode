@@ -61,13 +61,16 @@ public:
   //=====================================================
   //Yuwei
   void
-  SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size);
+  SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size, Time rto);
 
   void
   DiscardInterestBySeq(SequenceNumber32 disSeq);
 
   Time
   CalRTObyCorrelativity(Name name);
+
+  //Time
+  //GetRtobySeq(SequenceNumber32 seq);
 
   //---------------------------------------------------------------------------------------------
   Time
