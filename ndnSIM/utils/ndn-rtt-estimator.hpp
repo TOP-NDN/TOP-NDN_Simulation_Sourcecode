@@ -222,6 +222,12 @@ public:
   Time
   GetRtobySeq(SequenceNumber32 seq);
 
+  Time
+  GetRetransRtobySeq(SequenceNumber32 seq);
+
+  Name
+  GetNamebySeq(SequenceNumber32 seq);
+
 private:
   SequenceNumber32 m_next; // Next expected sequence to be sent
   uint16_t m_maxMultiplier;

@@ -188,6 +188,47 @@ void NsTree::Print(void)
 {
 	root->Print();
 }
+
+void NsTree::BuildScene(string sc)
+{
+	if(sc == "scene1")
+	{
+		NsNode* level1, *level2;
+		//=======================================================
+		//addr_0, addr_1, addr_2
+		root->CreateChilds(3);
+		//addr_0
+		level1 = root->GetChildByIndex(0);
+		level1->CreateChilds(3);
+		level2 = level1->GetChildByIndex(0);
+		level2->CreateChilds(2);
+		level2 = level1->GetChildByIndex(1);
+		level2->CreateChilds(3);
+		level2 = level1->GetChildByIndex(2);
+		level2->CreateChilds(2);
+
+		//addr_1
+		level1 = root->GetChildByIndex(1);
+		level1->CreateChilds(3);
+		level2 = level1->GetChildByIndex(0);
+		level2->CreateChilds(3);
+		level2 = level1->GetChildByIndex(1);
+		level2->CreateChilds(4);
+		level2 = level1->GetChildByIndex(2);
+		level2->CreateChilds(3);
+
+		//addr_2
+		level1 = root->GetChildByIndex(2);
+		level1->CreateChilds(3);
+		level2 = level1->GetChildByIndex(0);
+		level2->CreateChilds(2);
+		level2 = level1->GetChildByIndex(1);
+		level2->CreateChilds(3);
+		level2 = level1->GetChildByIndex(2);
+		level2->CreateChilds(2);
+	}
+}
+
 //==================================================================================================
 NS_OBJECT_ENSURE_REGISTERED(ConsumerRandomCbr);
 TypeId
@@ -228,9 +269,10 @@ ConsumerRandomCbr::ConsumerRandomCbr()
   //================================================
   //Yuwei
   aNameTree.InitBuild(3,3);
-  sNameTree.InitBuild(4,3);
+  sNameTree.BuildScene("scene1");
+  //sNameTree.InitBuild(4,3);
   //aNameTree.Print();
-  //sNameTree.Print();
+  sNameTree.Print();
   //cout<<"============================"<<endl;
 }
 

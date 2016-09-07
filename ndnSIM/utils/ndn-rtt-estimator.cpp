@@ -327,5 +327,36 @@ RttEstimator::GetRtobySeq(SequenceNumber32 seq)
 	return rto;
 }
 
+Time
+RttEstimator::GetRetransRtobySeq(SequenceNumber32 seq)
+{
+	double retval=0.0;
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if(i->seq == seq)
+		{
+			retval =std::min(m_maxRto.ToDouble(Time::S), i->rto.ToDouble(Time::S)*2);
+
+			break;
+		}
+	}
+	return Seconds(retval);
+}
+
+Name
+RttEstimator::GetNamebySeq(SequenceNumber32 seq)
+{
+	Name tmp("");
+	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if(i->seq == seq)
+		{
+			tmp = i->name;
+			break;
+		}
+	}
+	return tmp;
+}
+
 } // namespace ndn
 } // namespace ns3

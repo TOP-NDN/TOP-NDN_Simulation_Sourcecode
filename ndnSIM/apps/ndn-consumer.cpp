@@ -201,10 +201,20 @@ Consumer::SendPacket()
     seq = m_seq++;
   }
 
-  //Setting a name for current interest
-  shared_ptr<Name> nameWithSequence = make_shared<Name>(m_interestName);
-  nameWithSequence->appendSequenceNumber(seq);
-  //
+  //-------------------------------------------------------------------------------------------------------------------
+  //if it a retranmitted interest, i will get it name from m_rtt
+  shared_ptr<Name> nameWithSequence;
+  Name tmpName = m_rtt->GetNamebySeq(SequenceNumber32(seq));
+  if(tmpName.toUri() == "/")
+  {
+	  //set a new name
+	  nameWithSequence = make_shared<Name>(m_interestName);
+	  nameWithSequence->appendSequenceNumber(seq);
+  }
+  else
+  {
+	  nameWithSequence = make_shared<Name>(tmpName);
+  }
 
   //Create an Interest packet
   shared_ptr<Interest> interest = make_shared<Interest>();
@@ -223,7 +233,11 @@ Consumer::SendPacket()
 
   //------------------------------------------------------------------------
   //Debug -Yuwei
-  cout<<"Send Interest="<<interest->getName()<<" Seq="<<seq<<endl;
+  cout<<"Node="<<GetNode()->GetId()
+		  <<",Send Interest="<<interest->getName()
+		  <<" Seq="<<seq
+		  <<",Time="<<Simulator::Now().ToDouble(Time::S)
+		  <<endl;
 
   /*Test
   Name tmpName1("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
@@ -303,9 +317,10 @@ Consumer::OnData(shared_ptr<const Data> data)
 
   //---------------------------------------------------------------------------------
   //Yuwei
-  cout<<"Get Data="<<data->getName()
-		  <<" Seq="<<seq
-		  <<" Time="<<Simulator::Now().ToDouble(Time::S)
+  cout<<"Node="<<GetNode()->GetId()
+		  <<",Get Data="<<data->getName()
+		  <<",Seq="<<seq
+		  <<",Time="<<Simulator::Now().ToDouble(Time::S)
 		  <<endl;
   //---------------------------------------------------------------------------------
   m_rtt->AckSeq(*dataName, SequenceNumber32(seq));
@@ -382,15 +397,23 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 	  //==================================================================================
 	  //Calculate RTO
 	  Time rto;
-	  if(!m_isSameWithLastInterest)
+	  rto = m_rtt->GetRetransRtobySeq(SequenceNumber32(sequenceNumber));
+	  // an retransmitted interest
+	  if(rto.ToDouble(Time::S) == 0.0)
 	  {
-		  //RTO by Correlativity
-		  rto = m_rtt->CalRTObyCorrelativity(name);
-	  }
-	  else
-	  {
-		  //TCP RTO
-		  rto = m_rtt->RetransmitTimeout();
+		  //cout<<"@@@@@@@@@@@@@@@@@@"<<endl;
+		  if(!m_isSameWithLastInterest)
+		  {
+			  //When the interest is sent the 1st time
+			  //RTO by Correlativity
+			  rto = m_rtt->CalRTObyCorrelativity(name);
+		  }
+		  else
+		  {
+			  //TCP RTO
+			  cout<<"***********************************"<<endl;
+			  rto = m_rtt->RetransmitTimeout();
+		  }
 	  }
 	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1, rto);
 }

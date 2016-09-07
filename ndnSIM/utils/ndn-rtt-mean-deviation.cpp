@@ -177,6 +177,7 @@ RttMeanDeviation::SetInterestInfo(Name name, SequenceNumber32 seq, uint32_t size
 		if (seq == i->seq)
 	    { // Found it
 	      i->retx = true;
+	      i->rto = rto;
 	      break;
 	    }
 	}

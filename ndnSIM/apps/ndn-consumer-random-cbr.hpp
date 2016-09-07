@@ -53,6 +53,8 @@ public:
 	string GetRandomName(void);
 	int GetLevels();
 	void Print(void);
+	//---------------------------------------------------------------------------
+	void BuildScene(string sc);
 private:
 		NsNode* root;
 		int levels;
