@@ -302,7 +302,8 @@ void
 RttEstimator::UpateRttHistory(double min)
 {
 	Time timeDiff;
-	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	RttHistory_t::iterator i;
+	for (i = m_history.begin(); i != m_history.end(); ++i)
 	{
 		timeDiff = Simulator::Now() - i->rcvTime;
 		if(timeDiff.ToDouble(Time::MIN)>min)  //min minutes
@@ -316,7 +317,8 @@ Time
 RttEstimator::GetRtobySeq(SequenceNumber32 seq)
 {
 	Time rto(0);
-	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	RttHistory_t::iterator i;
+	for (i = m_history.begin(); i != m_history.end(); ++i)
 	{
 		if(i->seq == seq)
 		{
@@ -331,7 +333,8 @@ Time
 RttEstimator::GetRetransRtobySeq(SequenceNumber32 seq)
 {
 	double retval=0.0;
-	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	RttHistory_t::iterator i;
+	for (i = m_history.begin(); i != m_history.end(); ++i)
 	{
 		if(i->seq == seq)
 		{
@@ -347,7 +350,8 @@ Name
 RttEstimator::GetNamebySeq(SequenceNumber32 seq)
 {
 	Name tmp("");
-	for (RttHistory_t::iterator i = m_history.begin(); i != m_history.end(); ++i)
+	RttHistory_t::iterator i;
+	for (i = m_history.begin(); i != m_history.end(); ++i)
 	{
 		if(i->seq == seq)
 		{
@@ -356,6 +360,51 @@ RttEstimator::GetNamebySeq(SequenceNumber32 seq)
 		}
 	}
 	return tmp;
+}
+
+Time
+RttEstimator::CalRTObyHistory(void)
+{
+	Time rtt;
+	double sum = 0.0;
+	double result, retval=0.0;
+	unsigned int num = 0;
+
+	RttHistory_t::iterator i;
+	for (i = m_history.begin(); i != m_history.end(); ++i)
+	{
+		if(i->rcvTime > i->time)
+		{
+			rtt = i->rcvTime - i->time;
+			sum += rtt.ToDouble(Time::S);
+			num++;
+		}
+	}
+
+	if(num == 0)
+		result = 0.0;
+	else
+		result = sum/num;
+
+	retval = std::min(m_maxRto.ToDouble(Time::S),
+	                          std::max(m_minRto.ToDouble(Time::S), result));
+	return Seconds(retval);
+}
+
+void
+RttEstimator::SetRetransmitbySeq(SequenceNumber32 seq)
+{
+	  RttHistory_t::iterator i;
+	  for (i = m_history.begin(); i != m_history.end(); ++i)
+	  {
+	    if (seq == i->seq)
+	    {
+	    	i->retx = true;
+	    	break;
+	    }
+	  }
+	  if (i == m_history.end())
+	    cout<<"ERROR!"<<endl;
 }
 
 } // namespace ndn

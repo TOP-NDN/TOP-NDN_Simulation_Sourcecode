@@ -228,6 +228,12 @@ public:
   Name
   GetNamebySeq(SequenceNumber32 seq);
 
+  Time
+  CalRTObyHistory(void);
+
+ void
+  SetRetransmitbySeq(SequenceNumber32 seq);
+
 private:
   SequenceNumber32 m_next; // Next expected sequence to be sent
   uint16_t m_maxMultiplier;

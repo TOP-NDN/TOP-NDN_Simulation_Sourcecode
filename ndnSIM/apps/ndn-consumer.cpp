@@ -330,19 +330,22 @@ void
 Consumer::OnTimeout(uint32_t sequenceNumber)
 {
   NS_LOG_FUNCTION(sequenceNumber);
-  // std::cout << Simulator::Now () << ", TO: " << sequenceNumber << ", current RTO: " <<
-  // m_rtt->RetransmitTimeout ().ToDouble (Time::S) << "s\n";
 
-  m_rtt->IncreaseMultiplier(); // Double the next RTO
+  Name reIntName;
+
+  // Double the next RTO
+  // this is used in TCP method
+  m_rtt->IncreaseMultiplier();
 
   //-----------------------------------------------------------------------------------
   //Yuwei
-
+  // Retranmit this interest or not?
   if(m_seqRetxCounts[sequenceNumber] < GetRetxNumber())
   {
 	  //cout<<"SEQ: "<<sequenceNumber<<" transmitted "<<m_seqRetxCounts[sequenceNumber]<<"times."<<endl;
-	  m_rtt->SentSeq(SequenceNumber32(sequenceNumber),1); // make sure to disable RTT calculation for this sample
-	  m_retxSeqs.insert(sequenceNumber);     //insert data into retransmitted table
+	  //m_rtt->SentSeq(SequenceNumber32(sequenceNumber),1); // make sure to disable RTT calculation for this sample
+	  m_rtt->SetRetransmitbySeq(SequenceNumber32(sequenceNumber));
+	  m_retxSeqs.insert(sequenceNumber);     //insert data into retransmitted table, waiting for retransmitting
 	  ScheduleNextPacket();
   }
   else
@@ -392,11 +395,10 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 
 	  m_seqRetxCounts[sequenceNumber]++;
 
-	  //m_rtt->SentSeq(SequenceNumber32(sequenceNumber), 1);
-	  //Time rto
+	  Time rto;
+
 	  //==================================================================================
 	  //Calculate RTO
-	  Time rto;
 	  rto = m_rtt->GetRetransRtobySeq(SequenceNumber32(sequenceNumber));
 	  // an retransmitted interest
 	  if(rto.ToDouble(Time::S) == 0.0)
@@ -405,8 +407,10 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 		  if(!m_isSameWithLastInterest)
 		  {
 			  //When the interest is sent the 1st time
-			  //RTO by Correlativity
-			  rto = m_rtt->CalRTObyCorrelativity(name);
+			  //1、Get RTO by Correlativity
+			  //rto = m_rtt->CalRTObyCorrelativity(name);
+			  //2、Get RTO by History
+			  rto = m_rtt->CalRTObyHistory();
 		  }
 		  else
 		  {
@@ -415,8 +419,13 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 			  rto = m_rtt->RetransmitTimeout();
 		  }
 	  }
+
+	  //==================================================================================
+	  //3、Get RTO by TCP Method
+	  //rto = m_rtt->RetransmitTimeout();
 	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1, rto);
 }
+
 void
 Consumer::SetPrefix(string pre)
 {
