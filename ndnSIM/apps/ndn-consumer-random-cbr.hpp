@@ -32,15 +32,19 @@ namespace ndn {
 class NsNode{
 public:
 	NsNode(string str);
+	NsNode(string str, bool active);
 	~NsNode();
 	void CreateChilds(unsigned short num);
 	string GetString(void);
 	NsNode* GetChildByIndex(unsigned short i);
+	NsNode* GetActiveChlidByRandom(void);
 	unsigned short GetChildNum(void);
 	void Print(void);
+	void Deactivate(void);
 private:
 	string m_element;
 	list<NsNode*> p_childs;
+	bool is_active;
 };
 
 class NsTree{

@@ -47,6 +47,13 @@ NsNode::NsNode(string str)
 	NS_LOG_FUNCTION(this);
 }
 
+NsNode::NsNode(string str, bool active)
+   : m_element(str)
+   , is_active(active)
+{
+	NS_LOG_FUNCTION(this);
+}
+
 NsNode::~NsNode()
 {
 	for(list<NsNode*>::iterator it=p_childs.begin();it!=p_childs.end();it++)
@@ -63,7 +70,7 @@ void NsNode::CreateChilds(unsigned short num)
 		stringstream ss;
 		ss << i;
 		string str_i = m_element + "_" + ss.str();
-		NsNode* child_i = new NsNode(str_i);
+		NsNode* child_i = new NsNode(str_i, is_active);
 		p_childs.push_back(child_i);
 	}
 }
@@ -84,6 +91,38 @@ NsNode * NsNode::GetChildByIndex(unsigned short num)
 	return *child;
 }
 
+NsNode * NsNode::GetActiveChlidByRandom(void)
+{
+	list<NsNode*> tmpList;
+	list<NsNode*>::iterator i;
+	int index, x;
+	for(i=p_childs.begin(); i!=p_childs.end();i++)
+	{
+		if((*i)->is_active)
+			tmpList.push_back(*i);
+	}
+	//Random Number
+	if(tmpList.size() == 0)
+	{
+		return NULL;
+	}
+	else if(tmpList.size() == 1)
+	{
+		return *tmpList.begin();
+	}
+	else
+	{
+
+		index = rand() % tmpList.size();
+		for(x=0, i=tmpList.begin(); i!=tmpList.end();i++,x++)
+		{
+			if(x== index)
+				break;
+		}
+		return *i;
+	}
+}
+
 unsigned short NsNode::GetChildNum(void)
 {
 	return p_childs.size();
@@ -91,27 +130,33 @@ unsigned short NsNode::GetChildNum(void)
 
 void NsNode::Print(void)
 {
-	cout<<m_element<<endl;
+	if(is_active)
+		cout<<m_element<<endl;
 	for (int i = 0; i < GetChildNum(); i++)
 	{
 		GetChildByIndex(i)->Print();
 	}
+}
+
+void NsNode::Deactivate(void)
+{
+	this->is_active = false;
 }
 //=============================================================
 //Tree
 //by Siyan Yao
 NsTree::NsTree(string r)
 {
-	this->root = new NsNode(r);
+	//this->root = new NsNode(r);
 	if(r =="A")
 	{
 		//root->m_element = "app";
-		this->root = new NsNode("app");
+		this->root = new NsNode("app", true);
 	}
 	if(r == "S")
 	{
 		//root->m_element = "addr";
-		this->root = new NsNode("addr");
+		this->root = new NsNode("addr", true);
 	}
 	//Init rand
 	unsigned int seed = (unsigned int) std::time(NULL);
@@ -145,6 +190,7 @@ void NsTree::Build(NsNode * r, unsigned short levels, unsigned short maxChilds)
 
 string NsTree::GetName(NsNode * node, unsigned int levels)
 {
+	NsNode * tmpNode;
 	string tmpElement="", tmpName = "";
 	if (levels == 0)
 		return "";
@@ -164,10 +210,17 @@ string NsTree::GetName(NsNode * node, unsigned int levels)
 			tmpName = "/" + node->GetString();
 		}
 		//--------------------------------------------------------------------------------------------
+		/*
 		if(node->GetChildNum() > 0)
 		{
 			int i = rand() % (node->GetChildNum());
 			tmpName += GetName(node->GetChildByIndex(i), levels - 1);
+		}
+		*/
+		tmpNode = node->GetActiveChlidByRandom();
+		if(tmpNode)
+		{
+			tmpName += GetName(tmpNode, levels - 1);
 		}
 		return tmpName;
 	}
@@ -201,10 +254,12 @@ void NsTree::BuildScene(string sc)
 		level1 = root->GetChildByIndex(0);
 		level1->CreateChilds(3);
 		level2 = level1->GetChildByIndex(0);
+		level2->Deactivate();
 		level2->CreateChilds(2);
 		level2 = level1->GetChildByIndex(1);
 		level2->CreateChilds(3);
 		level2 = level1->GetChildByIndex(2);
+		level2->Deactivate();
 		level2->CreateChilds(2);
 
 		//addr_1
@@ -213,6 +268,7 @@ void NsTree::BuildScene(string sc)
 		level2 = level1->GetChildByIndex(0);
 		level2->CreateChilds(3);
 		level2 = level1->GetChildByIndex(1);
+		level2->Deactivate();
 		level2->CreateChilds(4);
 		level2 = level1->GetChildByIndex(2);
 		level2->CreateChilds(3);
@@ -221,10 +277,12 @@ void NsTree::BuildScene(string sc)
 		level1 = root->GetChildByIndex(2);
 		level1->CreateChilds(3);
 		level2 = level1->GetChildByIndex(0);
+		level2->Deactivate();
 		level2->CreateChilds(2);
 		level2 = level1->GetChildByIndex(1);
 		level2->CreateChilds(3);
 		level2 = level1->GetChildByIndex(2);
+		level2->Deactivate();
 		level2->CreateChilds(2);
 	}
 }
@@ -272,7 +330,7 @@ ConsumerRandomCbr::ConsumerRandomCbr()
   sNameTree.BuildScene("scene1");
   //sNameTree.InitBuild(4,3);
   //aNameTree.Print();
-  sNameTree.Print();
+  //sNameTree.Print();
   //cout<<"============================"<<endl;
 }
 
