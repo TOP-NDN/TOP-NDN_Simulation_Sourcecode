@@ -142,6 +142,11 @@ void NsNode::Deactivate(void)
 {
 	this->is_active = false;
 }
+
+bool NsNode::GetStatus(void)
+{
+	return is_active;
+}
 //=============================================================
 //Tree
 //by Siyan Yao
@@ -190,37 +195,46 @@ void NsTree::Build(NsNode * r, unsigned short levels, unsigned short maxChilds)
 
 string NsTree::GetName(NsNode * node, unsigned int levels)
 {
+	/*
+	cout<<"GetName="<<node->GetString()
+			<<"Levels="<<levels
+			<<endl;*/
 	NsNode * tmpNode;
 	string tmpElement="", tmpName = "";
 	if (levels == 0)
 		return "";
 	else
 	{
-		tmpElement = node->GetString();
-		if(tmpElement == "app")
+		if(node->GetStatus())
 		{
-			tmpName = "/A";
-		}
-		else if(tmpElement == "addr")
-		{
-			tmpName = "/S";
-		}
-		else
-		{
-			tmpName = "/" + node->GetString();
-		}
-		//--------------------------------------------------------------------------------------------
-		/*
-		if(node->GetChildNum() > 0)
-		{
-			int i = rand() % (node->GetChildNum());
-			tmpName += GetName(node->GetChildByIndex(i), levels - 1);
-		}
-		*/
-		tmpNode = node->GetActiveChlidByRandom();
-		if(tmpNode)
-		{
-			tmpName += GetName(tmpNode, levels - 1);
+			tmpElement = node->GetString();
+			if(tmpElement == "app")
+			{
+				tmpName += "/A";
+			}
+			else if(tmpElement == "addr")
+			{
+				tmpName += "/S";
+			}
+			else
+			{
+				tmpName += "/" + tmpElement;
+			}
+			//---------------------------------------------------------------
+			//Child
+			/*
+			if(node->GetChildNum() > 0)
+			{
+				int i = rand() % (node->GetChildNum());
+				tmpName += GetName(node->GetChildByIndex(i), levels - 1);
+			}
+			*/
+			tmpNode = node->GetActiveChlidByRandom();
+			if(tmpNode)
+			{
+				tmpName += GetName(tmpNode, levels - 1);
+			}
+			//---------------------------------------------------------------
 		}
 		return tmpName;
 	}
@@ -228,6 +242,11 @@ string NsTree::GetName(NsNode * node, unsigned int levels)
 
 string NsTree::GetRandomName(void)
 {
+	/*
+	cout<<"GetRandomName="
+			<<root->GetString()
+			<<"Levels="<<this->GetLevels()
+			<<endl;*/
 	string name = GetName(root, this->GetLevels());
 	return name;
 }
@@ -249,6 +268,7 @@ void NsTree::BuildScene(string sc)
 		NsNode* level1, *level2;
 		//=======================================================
 		//addr_0, addr_1, addr_2
+		this->levels = 4;
 		root->CreateChilds(3);
 		//addr_0
 		level1 = root->GetChildByIndex(0);

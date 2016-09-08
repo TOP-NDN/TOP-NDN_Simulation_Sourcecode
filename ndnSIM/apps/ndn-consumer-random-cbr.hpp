@@ -41,6 +41,7 @@ public:
 	unsigned short GetChildNum(void);
 	void Print(void);
 	void Deactivate(void);
+	bool GetStatus(void);
 private:
 	string m_element;
 	list<NsNode*> p_childs;
