@@ -215,7 +215,7 @@ RttMeanDeviation::CalRTObyCorrelativity(Name name)
 	if(m_history.size()==0)
 	{
 		//return Seconds(0.0);
-		rtoValue=0.0;
+		rtoValue=GetInitialEstimatedRtt().ToDouble(Time::S);
 	}
 	else
 	{
@@ -250,17 +250,41 @@ RttMeanDeviation::CalRTObyCorrelativity(Name name)
 		//------------------------------------------------------------------------------------------------------
 		if(coList.size()>0)
 		{
-			//cout<<",scSum="<<scSum;
-			//cout<<",acSum="<<acSum;
-			//cout<<",tcSum="<<tcSum<<endl;
+			cout<<",scSum="<<scSum;
+			cout<<",acSum="<<acSum;
+			cout<<",tcSum="<<tcSum<<endl;
 			for(i=coList.begin();i!=coList.end();++i)
 			{
-				//cout<<i->rtt.ToDouble(Time::S)<<endl;
-				rtoValue+=i->rtt.ToDouble(Time::S)*(i->sCo*acSum*tcSum+i->aCo*scSum*tcSum+i->tCo*scSum*acSum)/(3.0*scSum*acSum*tcSum);
+				//=====================================================================
+				if(scSum!=0 && acSum!=0 && tcSum!=0)
+				{
+					rtoValue+=i->rtt.ToDouble(Time::S)*(i->sCo*acSum*tcSum+i->aCo*scSum*tcSum+i->tCo*scSum*acSum)/(3.0*scSum*acSum*tcSum);
+				}
+				else if(scSum==0 && acSum!=0 && tcSum!=0)
+				{
+					rtoValue+=i->rtt.ToDouble(Time::S)*(i->aCo*tcSum+i->tCo*acSum)/(2.0*acSum*tcSum);
+				}
+				else if(scSum!=0 && acSum==0 && tcSum!=0)
+				{
+					rtoValue+=i->rtt.ToDouble(Time::S)*(i->sCo*tcSum+i->tCo*scSum)/(2.0*scSum*tcSum);
+				}
+				else if(scSum==0 && acSum==0 && tcSum!=0)
+				{
+					rtoValue+=i->rtt.ToDouble(Time::S)*(i->tCo)/tcSum;
+				}
+				else
+				{
+					rtoValue=GetInitialEstimatedRtt().ToDouble(Time::S);
+					break;
+				}
 			}
 		}
+		else
+		{
+			rtoValue=GetInitialEstimatedRtt().ToDouble(Time::S);
+		}
 	}
-
+    cout<<"rtoValue = "<<rtoValue<<endl;
 	double retval = std::min(m_maxRto.ToDouble(Time::S),
 	                          std::max(m_minRto.ToDouble(Time::S), rtoValue));
 	return Seconds(retval);

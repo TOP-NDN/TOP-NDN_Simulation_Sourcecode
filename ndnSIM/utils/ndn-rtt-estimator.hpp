@@ -225,6 +225,9 @@ public:
   Time
   GetRetransRtobySeq(SequenceNumber32 seq);
 
+  Time
+  GetInitialEstimatedRtt(void)const;
+
   Name
   GetNamebySeq(SequenceNumber32 seq);
 

@@ -363,6 +363,12 @@ RttEstimator::GetNamebySeq(SequenceNumber32 seq)
 }
 
 Time
+RttEstimator::GetInitialEstimatedRtt(void)const
+{
+	return m_currentEstimatedRtt;
+}
+
+Time
 RttEstimator::CalRTObyHistory(void)
 {
 	Time rtt;

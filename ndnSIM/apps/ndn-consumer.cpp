@@ -237,7 +237,7 @@ Consumer::SendPacket()
 		  <<",Send Interest="<<interest->getName()
 		  <<" Seq="<<seq
 		  <<",Time="<<Simulator::Now().ToDouble(Time::S)
-		  <<endl;
+		  <<"s"<<endl;
 
   /*Test
   Name tmpName1("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
@@ -317,10 +317,14 @@ Consumer::OnData(shared_ptr<const Data> data)
 
   //---------------------------------------------------------------------------------
   //Yuwei
+  Ptr<MobilityModel> mob = GetNode()->GetObject<MobilityModel>();
+  Vector pos = mob->GetPosition ();
+
   cout<<"Node="<<GetNode()->GetId()
 		  <<",Get Data="<<data->getName()
 		  <<",Seq="<<seq
 		  <<",Time="<<Simulator::Now().ToDouble(Time::S)
+		  <<"s,Pos=("<<pos.x<<","<<pos.y<<")"
 		  <<endl;
   //---------------------------------------------------------------------------------
   m_rtt->AckSeq(*dataName, SequenceNumber32(seq));
@@ -408,9 +412,9 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 		  {
 			  //When the interest is sent the 1st time
 			  //1、Get RTO by Correlativity
-			  //rto = m_rtt->CalRTObyCorrelativity(name);
+			  rto = m_rtt->CalRTObyCorrelativity(name);
 			  //2、Get RTO by History
-			  rto = m_rtt->CalRTObyHistory();
+			  //rto = m_rtt->CalRTObyHistory();
 		  }
 		  else
 		  {
@@ -424,6 +428,10 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 	  //3、Get RTO by TCP Method
 	  //rto = m_rtt->RetransmitTimeout();
 	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1, rto);
+	  cout<<"Name="<<name
+			  <<", Seq="<<sequenceNumber
+			  <<", RTO="<<rto.ToDouble(Time::MS)
+			  <<"ms"<<endl;
 }
 
 void

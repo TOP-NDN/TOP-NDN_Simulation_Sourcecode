@@ -32,6 +32,7 @@
 #include "ns3/ndnSIM/utils/ndn-rtt-estimator.hpp"
 //#include "ndn-rtt-mean-deviation.hpp"
 #include "ns3/ndnSIM/utils/ndn-fw-hop-count-tag.hpp"
+#include "ns3/mobility-module.h"
 
 #include <set>
 #include <map>
