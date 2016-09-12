@@ -250,9 +250,9 @@ RttMeanDeviation::CalRTObyCorrelativity(Name name)
 		//------------------------------------------------------------------------------------------------------
 		if(coList.size()>0)
 		{
-			cout<<",scSum="<<scSum;
-			cout<<",acSum="<<acSum;
-			cout<<",tcSum="<<tcSum<<endl;
+			//cout<<",scSum="<<scSum;
+			//cout<<",acSum="<<acSum;
+			//cout<<",tcSum="<<tcSum<<endl;
 			for(i=coList.begin();i!=coList.end();++i)
 			{
 				//=====================================================================
@@ -284,7 +284,7 @@ RttMeanDeviation::CalRTObyCorrelativity(Name name)
 			rtoValue=GetInitialEstimatedRtt().ToDouble(Time::S);
 		}
 	}
-    cout<<"rtoValue = "<<rtoValue<<endl;
+    //cout<<"rtoValue = "<<rtoValue<<endl;
 	double retval = std::min(m_maxRto.ToDouble(Time::S),
 	                          std::max(m_minRto.ToDouble(Time::S), rtoValue));
 	return Seconds(retval);

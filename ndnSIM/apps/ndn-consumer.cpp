@@ -117,9 +117,9 @@ Consumer::CheckRetxTimeout()
   Time now = Simulator::Now();
 
   //Get the RTO value from RTTestimator
-  //Time rto = m_rtt->RetransmitTimeout();
   Time rto;
   // NS_LOG_DEBUG ("Current RTO: " << rto.ToDouble (Time::S) << "s");
+  SeqTimeoutsContainer::index<i_timestamp>::type::iterator entry, tmp;
 
   while (!m_seqTimeouts.empty())
   {
@@ -128,8 +128,14 @@ Consumer::CheckRetxTimeout()
     uint32_t seqNo = entry->seq;
     //Get Rto value from RttHistory
     rto = m_rtt->GetRtobySeq(SequenceNumber32(seqNo));
+    /*
+    cout<<"Seq = "<<seqNo
+    		<<",send Time="<<entry->time.ToDouble(Time::MS)
+    		<<", rto ="<<rto.ToDouble(Time::MS)
+			<<", now ="<<now.ToDouble(Time::MS)
+			<<endl;*/
     // timeout expired?
-    if (entry->time + rto <= now)
+    if (entry->time <= now)
     {
       //uint32_t seqNo = entry->seq;
       m_seqTimeouts.get<i_timestamp>().erase(entry);
@@ -139,6 +145,7 @@ Consumer::CheckRetxTimeout()
       break; // nothing else to do. All later packets need not be retransmitted
   }
 
+  //cout<<m_retxTimer.ToDouble(Time::MS)<<endl;
   m_retxEvent = Simulator::Schedule(m_retxTimer, &Consumer::CheckRetxTimeout, this);
 }
 
@@ -177,14 +184,14 @@ Consumer::SendPacket()
   //Find the max value of sequence number
   uint32_t seq = std::numeric_limits<uint32_t>::max(); // invalid
 
-  //If there is something need to be retransmitted
+  /*If there is something need to be retransmitted
   //Select the 1st one in this set and to send it
   while (m_retxSeqs.size())
   {
     seq = *m_retxSeqs.begin();
     m_retxSeqs.erase(m_retxSeqs.begin());
     break;
-  }
+  }*/
 
   //2 Max Number of sequence numbers
   // 1 is physical max
@@ -232,13 +239,13 @@ Consumer::SendPacket()
   WaitBeforeSendOutInterest(seq, *nameWithSequence);
 
   //------------------------------------------------------------------------
-  //Debug -Yuwei
+  /*Debug -Yuwei
   cout<<"Node="<<GetNode()->GetId()
 		  <<",Send Interest="<<interest->getName()
 		  <<" Seq="<<seq
 		  <<",Time="<<Simulator::Now().ToDouble(Time::S)
 		  <<"s"<<endl;
-
+  */
   /*Test
   Name tmpName1("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
   Name tmpName2("/S/NankaiDistrict/NanjingRoad/BinjiangStreet/A/TrafficInformer/RoadStatus");
@@ -335,6 +342,7 @@ Consumer::OnTimeout(uint32_t sequenceNumber)
 {
   NS_LOG_FUNCTION(sequenceNumber);
 
+  //cout<<"Seq="<<sequenceNumber<<", time="<<Simulator::Now().ToDouble(Time::MS)<<"ms"<<endl;
   Name reIntName;
 
   // Double the next RTO
@@ -350,6 +358,26 @@ Consumer::OnTimeout(uint32_t sequenceNumber)
 	  //m_rtt->SentSeq(SequenceNumber32(sequenceNumber),1); // make sure to disable RTT calculation for this sample
 	  m_rtt->SetRetransmitbySeq(SequenceNumber32(sequenceNumber));
 	  m_retxSeqs.insert(sequenceNumber);     //insert data into retransmitted table, waiting for retransmitting
+
+	  //--------------------------------------------------------------------------------
+	  shared_ptr<Name> nameWithSequence;
+	  Name tmpName = m_rtt->GetNamebySeq(SequenceNumber32(sequenceNumber));
+	  if(tmpName.toUri() != "/")
+	  {
+		  nameWithSequence = make_shared<Name>(tmpName);
+		  //Create an Interest packet
+		  shared_ptr<Interest> interest = make_shared<Interest>();
+		  interest->setNonce(m_rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+		  interest->setName(*nameWithSequence);
+		  time::milliseconds interestLifeTime(m_interestLifeTime.GetMilliSeconds());
+		  interest->setInterestLifetime(interestLifeTime);
+
+		  WaitBeforeSendOutInterest(sequenceNumber, *nameWithSequence);
+
+		  m_transmittedInterests(interest, this, m_face);
+		  m_face->onReceiveInterest(*interest);
+	  }
+
 	  ScheduleNextPacket();
   }
   else
@@ -391,7 +419,7 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 	                                << m_seqTimeouts.size() << " items");
 
 	  //Save the time of interest with sequence number
-	  m_seqTimeouts.insert(SeqTimeout(sequenceNumber, Simulator::Now()));
+	  //m_seqTimeouts.insert(SeqTimeout(sequenceNumber, Simulator::Now()));
 	  m_seqFullDelay.insert(SeqTimeout(sequenceNumber, Simulator::Now()));
 
 	  m_seqLastDelay.erase(sequenceNumber);
@@ -427,10 +455,14 @@ Consumer::WaitBeforeSendOutInterest(uint32_t sequenceNumber, Name name)
 	  //==================================================================================
 	  //3、Get RTO by TCP Method
 	  //rto = m_rtt->RetransmitTimeout();
+	  m_seqTimeouts.insert(SeqTimeout(sequenceNumber, Simulator::Now()+rto));
 	  m_rtt->SetInterestInfo(name, SequenceNumber32(sequenceNumber), 1, rto);
-	  cout<<"Name="<<name
+
+	  cout<<"Node="<<GetNode()->GetId()
+			  <<", Send Interest="<<name
 			  <<", Seq="<<sequenceNumber
-			  <<", RTO="<<rto.ToDouble(Time::MS)
+			  <<", RTO="<<rto.ToDouble(Time::MS)<<"ms"
+			  <<", Time="<<Simulator::Now().ToDouble(Time::MS)
 			  <<"ms"<<endl;
 }
 
