@@ -85,36 +85,73 @@ int main (int argc, char *argv[])
   ndnHelper.InstallAll();
 
   // Choosing forwarding strategy
-  ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/best-route");
+  ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/multicast");
 
   //5、 Installing applications
   // Consumer
-  ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
+  //ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
   // Consumer will request /prefix/0, /prefix/1, ...
-  consumerHelper.SetPrefix("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
-  consumerHelper.SetAttribute("Frequency", StringValue("1.0"));  //1 interests a second
+  //consumerHelper.SetPrefix("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
+  //consumerHelper.SetAttribute("Frequency", StringValue("1.0"));  //1 interests a second
   //consumerHelper.Install(c.Get(0));
-  ApplicationContainer consumerApp = consumerHelper.Install(c.Get(0));
-  consumerApp.Start(Seconds(0));
-  consumerApp.Stop(Seconds(100));
+  //ApplicationContainer consumerApp = consumerHelper.Install(c.Get(0));
+  //consumerApp.Start(Seconds(0));
+  //consumerApp.Stop(Seconds(100));
   //consumerApp = consumerHelper.Install(c.Get(100));
   //consumerApp.Start(Seconds(710));
   //consumerApp.Stop(Seconds(950));
   //------------------------------------------------------------------------------------------
-  ndn::AppHelper consumerHelper2("ns3::ndn::ConsumerRandomCbr");
-  // Consumer will request /prefix/0, /prefix/1, ...
-  consumerHelper2.SetPrefix("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
-  consumerHelper2.SetAttribute("Frequency", StringValue("1.0"));  //1 interests a second
-  ApplicationContainer consumerApp2 = consumerHelper2.Install(c.Get(100));
+  ndn::AppHelper consumerHelper1("ns3::ndn::ConsumerRandomCbr");
+  consumerHelper1.SetAttribute("Frequency", StringValue("1.0"));  //1 interests a second
+  ApplicationContainer consumerApp2 = consumerHelper1.Install(c.Get(100));
   consumerApp2.Start(Seconds(710));
-  consumerApp2.Stop(Seconds(950));
+  consumerApp2.Stop(Seconds(800));
 
   // Producer
-  ndn::AppHelper producerHelper("ns3::ndn::Producer");
+  ndn::AppHelper producerHelper1("ns3::ndn::Producer");
   // Producer will reply to all requests starting with /prefix
-  producerHelper.SetPrefix("/S/NankaiDistrict/WeijingRoad/A/TrafficInformer/RoadCongestion");
-  producerHelper.SetAttribute("PayloadSize", StringValue("1024"));  //1-Chunk
-  producerHelper.Install(c.Get(nodeNum-1)); // last node
+  producerHelper1.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_0/A/app_0");
+  producerHelper1.SetAttribute("PayloadSize", StringValue("1024"));  //1-Chunk
+  producerHelper1.Install(c.Get(nodeNum-1)); // last node
+
+  producerHelper1.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_1/A/app_0");
+  producerHelper1.Install(c.Get(nodeNum-1)); // last nod
+
+  producerHelper1.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_2/A/app_0");
+  producerHelper1.Install(c.Get(nodeNum-1)); // last node
+
+  /*
+  ndn::AppHelper producerHelper2("ns3::ndn::Producer");
+  // Producer will reply to all requests starting with /prefix
+  producerHelper2.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_0/A/app_0");
+  producerHelper2.SetAttribute("PayloadSize", StringValue("1024"));  //1-Chunk
+  producerHelper2.Install(c.Get(nodeNum-1)); // last node
+
+  ndn::AppHelper producerHelper3("ns3::ndn::Producer");
+  // Producer will reply to all requests starting with /prefix
+  producerHelper3.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_2/A/app_0");
+  producerHelper3.SetAttribute("PayloadSize", StringValue("1024"));  //1-Chunk
+  producerHelper3.Install(c.Get(nodeNum-1)); // last node
+
+  ndn::AppHelper producerHelper4("ns3::ndn::Producer");
+  // Producer will reply to all requests starting with /prefix
+  producerHelper4.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_1/A/app_1");
+  producerHelper4.SetAttribute("PayloadSize", StringValue("1024"));  //1-Chunk
+  producerHelper4.Install(c.Get(nodeNum-1)); // last node
+
+  ndn::AppHelper producerHelper5("ns3::ndn::Producer");
+  // Producer will reply to all requests starting with /prefix
+  producerHelper5.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_0/A/app_1");
+  producerHelper5.SetAttribute("PayloadSize", StringValue("1024"));  //1-Chunk
+  producerHelper5.Install(c.Get(nodeNum-1)); // last node
+
+  ndn::AppHelper producerHelper6("ns3::ndn::Producer");
+  // Producer will reply to all requests starting with /prefix
+  producerHelper6.SetPrefix("/S/addr_0/addr_0_1/addr_0_1_2/A/app_1");
+  producerHelper6.SetAttribute("PayloadSize", StringValue("1024"));  //1-Chunk
+  producerHelper6.Install(c.Get(nodeNum-1)); // last node
+  */
+
 
   //liutingting 2016.1.7
   ndn::AppDelayTracer::InstallAll("Liutingting/app-delays-trace.txt");
