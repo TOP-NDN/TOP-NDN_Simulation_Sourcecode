@@ -39,6 +39,7 @@
 
 #include "ns3/ndnSIM/model/cs/ndn-content-store.hpp"
 
+
 namespace nfd {
 
 namespace fw {
@@ -111,6 +112,10 @@ public: // forwarding entrypoints and tables
 public: // allow enabling ndnSIM content store (will be removed in the future)
   void
   setCsFromNdnSim(ns3::Ptr<ns3::ndn::ContentStore> cs);
+
+  //----------------------------------------------------------------------------------------------------------
+  void
+  SetNodeId(uint32_t id);
 
 public:
   /** \brief trigger before PIT entry is satisfied
@@ -236,6 +241,9 @@ private:
 
   // allow Strategy (base class) to enter pipelines
   friend class fw::Strategy;
+
+  //------------------------------------------------------
+  uint32_t m_nodeId;
 };
 
 inline const ForwarderCounters&
@@ -331,8 +339,9 @@ inline void
 Forwarder::dispatchToStrategy(shared_ptr<pit::Entry> pitEntry, Function trigger)
 #endif
 {
-  fw::Strategy& strategy = m_strategyChoice.findEffectiveStrategy(*pitEntry);
-  trigger(&strategy);
+	fw::Strategy& strategy = m_strategyChoice.findEffectiveStrategy(*pitEntry);
+	//cout<<strategy.getName()<<endl;
+	trigger(&strategy);
 }
 
 } // namespace nfd

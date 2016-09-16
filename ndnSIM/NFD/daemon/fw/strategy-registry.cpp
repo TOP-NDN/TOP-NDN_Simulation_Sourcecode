@@ -25,6 +25,7 @@
 
 #include "strategy-registry.hpp"
 #include "best-route-strategy2.hpp"
+#include "multicast-strategy.hpp"     //Yuwei
 
 namespace nfd {
 namespace fw {
@@ -32,7 +33,8 @@ namespace fw {
 shared_ptr<Strategy>
 makeDefaultStrategy(Forwarder& forwarder)
 {
-  return make_shared<BestRouteStrategy2>(ref(forwarder));
+  //return make_shared<BestRouteStrategy2>(ref(forwarder));
+  return make_shared<MulticastStrategy>(ref(forwarder));   //Yuwei
 }
 
 static std::map<Name, StrategyCreateFunc>&

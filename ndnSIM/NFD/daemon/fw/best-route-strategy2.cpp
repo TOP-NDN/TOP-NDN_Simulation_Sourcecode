@@ -101,6 +101,7 @@ BestRouteStrategy2::afterReceiveInterest(const Face& inFace,
                                          shared_ptr<fib::Entry> fibEntry,
                                          shared_ptr<pit::Entry> pitEntry)
 {
+  //cout<<"Best Route2!!!"<<endl;
   const fib::NextHopList& nexthops = fibEntry->getNextHops();
   fib::NextHopList::const_iterator it = nexthops.end();
 

@@ -48,9 +48,12 @@ Forwarder::Forwarder()
   , m_measurements(m_nameTree)
   , m_strategyChoice(m_nameTree, fw::makeDefaultStrategy(*this))
   , m_csFace(make_shared<NullFace>(FaceUri("contentstore://")))
+  , m_nodeId(99999)  //?
 {
   fw::installStrategies(*this);
   getFaceTable().addReserved(m_csFace, FACEID_CONTENT_STORE);
+  //----------------------------------------------------------------------------------------------
+  m_strategyChoice.insert("/S", "ndn:/localhost/nfd/strategy/multicast");
 }
 
 Forwarder::~Forwarder()
@@ -61,42 +64,53 @@ Forwarder::~Forwarder()
 void
 Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 {
-  // receive Interest
-  NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() <<
+	/* receive Interest
+	cout<<"NDN:Node="<<m_nodeId
+			<<", onIncomingInterest face=" << inFace.getId()
+			<<", receive interest=" << interest.getName()<<endl;*/
+
+	NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() <<
                 " interest=" << interest.getName());
-  const_cast<Interest&>(interest).setIncomingFaceId(inFace.getId());
-  ++m_counters.getNInInterests();
 
-  // /localhost scope control
-  bool isViolatingLocalhost = !inFace.isLocal() &&
+	const_cast<Interest&>(interest).setIncomingFaceId(inFace.getId());
+	++m_counters.getNInInterests();
+
+	//--------------------------------------------------------------------------------------------
+	// /localhost scope control
+	bool isViolatingLocalhost = !inFace.isLocal() &&
                               LOCALHOST_NAME.isPrefixOf(interest.getName());
-  if (isViolatingLocalhost) {
-    NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() <<
+	if (isViolatingLocalhost)
+	{
+		NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() <<
                   " interest=" << interest.getName() << " violates /localhost");
-    // (drop)
-    return;
-  }
+		cout<<"NDN-DROP!!!! Node="<<m_nodeId
+				<<", onIncomingInterest face=" << inFace.getId()
+				<<", interest=" << interest.getName() << " violates /localhost"<<endl;
+		return; //drop
+	}
 
-  // PIT insert
-  shared_ptr<pit::Entry> pitEntry = m_pit.insert(interest).first;
+	// PIT insert
+	shared_ptr<pit::Entry> pitEntry = m_pit.insert(interest).first;
 
-  // detect duplicate Nonce
-  int dnw = pitEntry->findNonce(interest.getNonce(), inFace);
-  bool hasDuplicateNonce = (dnw != pit::DUPLICATE_NONCE_NONE) ||
+	// detect duplicate Nonce
+	int dnw = pitEntry->findNonce(interest.getNonce(), inFace);
+	bool hasDuplicateNonce = (dnw != pit::DUPLICATE_NONCE_NONE) ||
                            m_deadNonceList.has(interest.getName(), interest.getNonce());
-  if (hasDuplicateNonce) {
-    // goto Interest loop pipeline
-    this->onInterestLoop(inFace, interest, pitEntry);
-    return;
-  }
+	if (hasDuplicateNonce)
+	{
+		// goto Interest loop pipeline
+		this->onInterestLoop(inFace, interest, pitEntry);
+		return;
+	}
 
-  // cancel unsatisfy & straggler timer
-  this->cancelUnsatisfyAndStragglerTimer(pitEntry);
+	// cancel unsatisfy & straggler timer
+	this->cancelUnsatisfyAndStragglerTimer(pitEntry);
 
   // is pending?
   const pit::InRecordCollection& inRecords = pitEntry->getInRecords();
   bool isPending = inRecords.begin() != inRecords.end();
-  if (!isPending) {
+  if (!isPending)
+  {
     if (m_csFromNdnSim == nullptr) {
       m_cs.find(interest,
                 bind(&Forwarder::onContentStoreHit, this, ref(inFace), pitEntry, _1, _2),
@@ -122,12 +136,17 @@ Forwarder::onContentStoreMiss(const Face& inFace,
                               shared_ptr<pit::Entry> pitEntry,
                               const Interest& interest)
 {
-  NFD_LOG_DEBUG("onContentStoreMiss interest=" << interest.getName());
 
+	/*
+	cout<<"NDN:onContentStoreMiss:Node="<<m_nodeId
+			<<", onIncomingInterest face=" << inFace.getId()
+			<<", receive interest=" << interest.getName();*/
+	NFD_LOG_DEBUG("onContentStoreMiss interest=" << interest.getName());
+
+	//==============================================================================================================
   shared_ptr<Face> face = const_pointer_cast<Face>(inFace.shared_from_this());
   // insert InRecord
   pitEntry->insertOrUpdateInRecord(face, interest);
-
   // set PIT unsatisfy timer
   this->setUnsatisfyTimer(pitEntry);
 
@@ -203,10 +222,13 @@ Forwarder::onOutgoingInterest(shared_ptr<pit::Entry> pitEntry, Face& outFace,
 {
   if (outFace.getId() == INVALID_FACEID) {
     NFD_LOG_WARN("onOutgoingInterest face=invalid interest=" << pitEntry->getName());
+    //cout<<"onOutgoingInterest face=invalid interest="<< pitEntry->getName()<<endl;
     return;
   }
   NFD_LOG_DEBUG("onOutgoingInterest face=" << outFace.getId() <<
                 " interest=" << pitEntry->getName());
+  //cout<<"onOutgoingInterest face=" << outFace.getId()
+  //	  <<" interest=" << pitEntry->getName()<<endl;
 
   // scope control
   if (pitEntry->violatesScope(outFace)) {
@@ -232,7 +254,10 @@ Forwarder::onOutgoingInterest(shared_ptr<pit::Entry> pitEntry, Face& outFace,
   // insert OutRecord
   pitEntry->insertOrUpdateOutRecord(outFace.shared_from_this(), *interest);
 
-  // send Interest
+  /* send Interest
+  cout<<"NDN:Node="<<m_nodeId
+ 			<<",send interest=" << interest->getName()<<endl; */
+
   outFace.sendInterest(*interest);
   ++m_counters.getNOutInterests();
 }
@@ -286,7 +311,11 @@ Forwarder::onInterestFinalize(shared_ptr<pit::Entry> pitEntry, bool isSatisfied,
 void
 Forwarder::onIncomingData(Face& inFace, const Data& data)
 {
-  // receive Data
+   /* receive Data
+	cout<<"NDN:Node="<<m_nodeId
+			<<", onIncomingData face=" << inFace.getId()
+			<<", receive data=" << data.getName()<<endl;*/
+  //========================================================================
   NFD_LOG_DEBUG("onIncomingData face=" << inFace.getId() << " data=" << data.getName());
   const_cast<Data&>(data).setIncomingFaceId(inFace.getId());
   ++m_counters.getNInDatas();
@@ -294,8 +323,11 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
   // /localhost scope control
   bool isViolatingLocalhost = !inFace.isLocal() &&
                               LOCALHOST_NAME.isPrefixOf(data.getName());
-  if (isViolatingLocalhost) {
-    NFD_LOG_DEBUG("onIncomingData face=" << inFace.getId() <<
+  if (isViolatingLocalhost)
+  {
+	  //cout<<"onIncomingData face=" << inFace.getId()
+	  //	  <<" data=" << data.getName() << " violates /localhost";
+	  NFD_LOG_DEBUG("onIncomingData face=" << inFace.getId() <<
                   " data=" << data.getName() << " violates /localhost");
     // (drop)
     return;
@@ -306,6 +338,7 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
   if (pitMatches.begin() == pitMatches.end()) {
     // goto Data unsolicited pipeline
     this->onDataUnsolicited(inFace, data);
+    //cout<<"Data not match!"<<endl;
     return;
   }
 
@@ -359,11 +392,18 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
 
   // foreach pending downstream
   for (std::set<shared_ptr<Face> >::iterator it = pendingDownstreams.begin();
-      it != pendingDownstreams.end(); ++it) {
+      it != pendingDownstreams.end(); ++it)
+  {
     shared_ptr<Face> pendingDownstream = *it;
-    if (pendingDownstream.get() == &inFace) {
-      continue;
+
+    /*
+    if (pendingDownstream.get() == &inFace)
+    {
+    	cout<<"Interface == Outface="<<inFace.getId()<<endl;
+    	continue;
     }
+    */
+
     // goto outgoing Data pipeline
     this->onOutgoingData(data, *pendingDownstream);
   }
@@ -498,6 +538,11 @@ Forwarder::insertDeadNonceList(pit::Entry& pitEntry, bool isSatisfied,
       m_deadNonceList.add(pitEntry.getName(), outRecord->getLastNonce());
     }
   }
+}
+void
+Forwarder::SetNodeId(uint32_t id)
+{
+	m_nodeId = id;
 }
 
 } // namespace nfd

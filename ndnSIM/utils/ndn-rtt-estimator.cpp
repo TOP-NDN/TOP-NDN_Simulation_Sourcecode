@@ -376,24 +376,34 @@ RttEstimator::CalRTObyHistory(void)
 	double result, retval=0.0;
 	unsigned int num = 0;
 
-	RttHistory_t::iterator i;
-	for (i = m_history.begin(); i != m_history.end(); ++i)
+	if(m_history.size()==0)
 	{
-		if(i->rcvTime > i->time)
+		//return Seconds(0.0);
+		retval=GetInitialEstimatedRtt().ToDouble(Time::S);
+	}
+	else
+	{
+		RttHistory_t::iterator i;
+		for (i = m_history.begin(); i != m_history.end(); ++i)
 		{
-			rtt = i->rcvTime - i->time;
-			sum += rtt.ToDouble(Time::S);
-			num++;
+			if(i->rcvTime > i->time)
+			{
+				rtt = i->rcvTime - i->time;
+				sum += rtt.ToDouble(Time::S);
+				num++;
+			}
+		}
+		//-------------------------------------------------------------------------------------
+		if(num == 0)
+			retval=GetInitialEstimatedRtt().ToDouble(Time::S);
+		else
+		{
+			result = sum/num;
+			retval = std::min(m_maxRto.ToDouble(Time::S),
+					std::max(m_minRto.ToDouble(Time::S), result));
 		}
 	}
 
-	if(num == 0)
-		result = 0.0;
-	else
-		result = sum/num;
-
-	retval = std::min(m_maxRto.ToDouble(Time::S),
-	                          std::max(m_minRto.ToDouble(Time::S), result));
 	return Seconds(retval);
 }
 

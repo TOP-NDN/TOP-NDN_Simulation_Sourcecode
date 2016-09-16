@@ -40,6 +40,7 @@ StrategyChoice::StrategyChoice(NameTree& nameTree, shared_ptr<Strategy> defaultS
   : m_nameTree(nameTree)
   , m_nItems(0)
 {
+  //cout<<"defaultStrategy="<<defaultStrategy->getName()<<endl;
   this->setDefaultStrategy(defaultStrategy);
 }
 
@@ -59,6 +60,8 @@ StrategyChoice::install(shared_ptr<Strategy> strategy)
 {
   BOOST_ASSERT(static_cast<bool>(strategy));
   const Name& strategyName = strategy->getName();
+
+  //cout<<"Installing strategy = "<<strategy->getName()<<endl;
 
   if (this->hasStrategy(strategyName, true)) {
     NFD_LOG_ERROR("install(" << strategyName << ") duplicate strategyName");
@@ -179,8 +182,10 @@ StrategyChoice::findEffectiveStrategy(shared_ptr<name_tree::Entry> nte) const
 {
   shared_ptr<strategy_choice::Entry> entry = nte->getStrategyChoiceEntry();
   if (static_cast<bool>(entry))
+  {
+	cout<<"Strategy Name="<<entry->getStrategy().getName()<<endl;
     return entry->getStrategy();
-
+  }
   nte = m_nameTree.findLongestPrefixMatch(nte,
     [] (const name_tree::Entry& entry) {
       return static_cast<bool>(entry.getStrategyChoiceEntry());
@@ -196,6 +201,10 @@ StrategyChoice::findEffectiveStrategy(const pit::Entry& pitEntry) const
   shared_ptr<name_tree::Entry> nte = m_nameTree.get(pitEntry);
 
   BOOST_ASSERT(static_cast<bool>(nte));
+
+  //cout<<"PIT entry="<<pitEntry.getName();
+  //cout<<" ,name tree entry="<<nte->getPrefix()<<endl;
+  //cout<<", Strategy="<<this->findEffectiveStrategy(nte).getName()<<endl;
   return this->findEffectiveStrategy(nte);
 }
 

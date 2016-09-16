@@ -42,16 +42,22 @@ MulticastStrategy::afterReceiveInterest(const Face& inFace,
                    shared_ptr<fib::Entry> fibEntry,
                    shared_ptr<pit::Entry> pitEntry)
 {
+  //=============================================================
   const fib::NextHopList& nexthops = fibEntry->getNextHops();
-
-  for (fib::NextHopList::const_iterator it = nexthops.begin(); it != nexthops.end(); ++it) {
+  //cout<<"Multicast!";
+  for (fib::NextHopList::const_iterator it = nexthops.begin(); it != nexthops.end(); ++it)
+  {
     shared_ptr<Face> outFace = it->getFace();
-    if (pitEntry->canForwardTo(*outFace)) {
+
+    if (pitEntry->canForwardTo(*outFace))
+    {
+      //cout<<"Forwarding Interest !"<<endl;
       this->sendInterest(pitEntry, outFace);
     }
   }
 
-  if (!pitEntry->hasUnexpiredOutRecords()) {
+  if (!pitEntry->hasUnexpiredOutRecords())
+  {
     this->rejectPendingInterest(pitEntry);
   }
 }

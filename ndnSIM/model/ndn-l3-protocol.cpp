@@ -195,6 +195,10 @@ L3Protocol::initialize()
 
   m_impl->m_forwarder->beforeSatisfyInterest.connect(std::ref(m_satisfiedInterests));
   m_impl->m_forwarder->beforeExpirePendingInterest.connect(std::ref(m_timedOutInterests));
+
+  //--------------------------------------------------------------------------------
+  //give forwarder node's id
+  m_impl->m_forwarder->SetNodeId(m_node->GetId());
 }
 
 class IgnoreSections

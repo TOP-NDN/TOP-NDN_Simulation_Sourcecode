@@ -53,20 +53,35 @@ Entry::hasLocalInRecord() const
 bool
 Entry::canForwardTo(const Face& face) const
 {
+  //==========================================================================
   time::steady_clock::TimePoint now = time::steady_clock::now();
-
   bool hasUnexpiredOutRecord = std::any_of(m_outRecords.begin(), m_outRecords.end(),
     [&face, &now] (const OutRecord& outRecord) {
-      return outRecord.getFace().get() == &face && outRecord.getExpiry() >= now;
+	  return outRecord.getFace().get() == &face && outRecord.getExpiry() >= now;
     });
   if (hasUnexpiredOutRecord) {
     return false;
   }
 
+  /*
+  bool hasUnexpiredOtherInRecord = true;
+  for (const InRecord& inRecord : m_inRecords)
+  {
+	  if(inRecord.getExpiry() < now)
+	  {
+		  hasUnexpiredOtherInRecord = false;
+	  }
+	  if(inRecord.getFace().get() == &face && face.getId()==258)
+	  {
+		  hasUnexpiredOtherInRecord = false;
+	  }
+  }*/
+
   bool hasUnexpiredOtherInRecord = std::any_of(m_inRecords.begin(), m_inRecords.end(),
     [&face, &now] (const InRecord& inRecord) {
-      return inRecord.getFace().get() != &face && inRecord.getExpiry() >= now;
+	  return inRecord.getExpiry() >= now;
     });
+
   if (!hasUnexpiredOtherInRecord) {
     return false;
   }

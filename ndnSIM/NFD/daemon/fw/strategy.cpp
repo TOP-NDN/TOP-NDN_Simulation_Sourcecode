@@ -52,6 +52,9 @@ Strategy::beforeSatisfyInterest(shared_ptr<pit::Entry> pitEntry,
 {
   NFD_LOG_DEBUG("beforeSatisfyInterest pitEntry=" << pitEntry->getName() <<
     " inFace=" << inFace.getId() << " data=" << data.getName());
+
+  //cout<<"beforeSatisfyInterest pitEntry=" << pitEntry->getName()
+  //	  <<" inFace=" << inFace.getId() << " data=" << data.getName()<<endl;
 }
 
 void
